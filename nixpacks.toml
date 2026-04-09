@@ -1,6 +1,5 @@
 [phases.setup]
-# Добавляем системные зависимости: gcc для компиляции и libstdc++ для рантайма
-nixPkgs = ["nodejs", "python3", "bash", "gcc", "stdenv.cc.cc.lib"]
+nixPkgs = ["nodejs", "python3", "bash", "gcc", "libstdcxx5", "pkg-config", "glibc"]
 
 [phases.install]
 cmds = [
@@ -9,12 +8,9 @@ cmds = [
   "cd apps/backend && python3 -m venv .venv && .venv/bin/pip install -e .[dev] && .venv/bin/pip install uvicorn"
 ]
 
-# Прокидываем путь к библиотекам, чтобы Python их увидел
 [phases.build]
 dependsOn = ["install"]
 cmds = ["cd apps/frontend && npm run build"]
-# Переменная окружения LD_LIBRARY_PATH помогает системе найти libstdc++
-variables = { "LD_LIBRARY_PATH" = "/nix/store/$(ls /nix/store | grep stdenv-linux | head -n 1)/lib" }
 
 [start]
 cmd = "cd apps/backend && source .venv/bin/activate && (uvicorn app.main:app --host 0.0.0.0 --port 8000 & cd ../frontend && npm run start -- -p $PORT)"
