@@ -12,7 +12,7 @@
     "setup:backend": "cd apps/backend && python3 -m venv .venv && .venv/bin/pip install -e .[dev] && .venv/bin/pip install uvicorn",
     "setup": "npm run setup:frontend && npm run setup:backend",
     
-    "dev:backend": "cd apps/backend && .venv/bin/python -m uvicorn app.main:app --reload --port 8000",
+    "dev:backend": "cd apps/backend && export LD_LIBRARY_PATH=\"/nix/store/$(ls /nix/store | grep stdenv-linux | head -n 1)/lib\" && .venv/bin/python -m uvicorn app.main:app --host 0.0.0.0 --port 8000",
     "dev:frontend": "cd apps/frontend && npm run dev -- -p 3000",
     "dev": "concurrently -c \"cyan.bold,magenta.bold\" -n \"BACKEND,FRONTEND\" \"npm run dev:backend\" \"npm run dev:frontend\"",
     
