@@ -1,0 +1,269 @@
+@import "tailwindcss";
+
+/* ── Local fonts (DSGVO-friendly, no CDN) ───────────────── */
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "@fontsource/instrument-serif/400.css";
+@import "@fontsource/instrument-serif/400-italic.css";
+
+/* ── Design tokens ───────────────────────────────────────── */
+:root {
+  --background: 0 0% 0%;
+  --foreground: 0 0% 100%;
+  --card: rgba(255, 255, 255, 0.01);
+  --accent: #6c63ff;
+  --accent-strong: #7b2fbe;
+  --border: rgba(255, 255, 255, 0.08);
+  --muted: rgba(255, 255, 255, 0.62);
+  --panel-shadow: 0 18px 48px rgba(0, 0, 0, 0.24);
+
+  /* Agent colours */
+  --color-brain:   #6c63ff;
+  --color-legal:   #7b2fbe;
+  --color-finance: #00c9a7;
+  --color-hiring:  #10b981;
+  --color-ops:     #f59e0b;
+
+  /* Aurora colour tokens */
+  --aurora-violet:  #7b2fbe;
+  --aurora-cyan:    #00c9a7;
+  --aurora-emerald: #10b981;
+  --aurora-amber:   #f59e0b;
+  --aurora-indigo:  #6c63ff;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #fff;
+  background: #03060d;
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ── Liquid Glass (migrated from old app) ───────────────── */
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.01);
+  backdrop-filter: blur(10px) saturate(1.4);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.liquid-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0)    40%,
+    rgba(255, 255, 255, 0)    60%,
+    rgba(255, 255, 255, 0.15) 80%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* keep .panel as alias for liquid-glass */
+.panel {
+  border: 1px solid var(--border);
+  background: var(--card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1), var(--panel-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.2px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0)    40%,
+    rgba(255, 255, 255, 0)    60%,
+    rgba(255, 255, 255, 0.15) 80%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ── Glass border helpers ───────────────────────────────── */
+.glass-border-indigo { border: 1px solid rgba(108, 99, 255, 0.3); }
+.glass-border-soft   { border: 1px solid rgba(255, 255, 255, 0.08); }
+
+/* ── Aurora page background (migrated from old app) ─────── */
+.aurora-page {
+  position: relative;
+  isolation: isolate;
+  background: #03060d;
+}
+
+.aurora-page::before,
+.aurora-page::after {
+  content: '';
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(60px);
+}
+
+.aurora-page::before {
+  width: 36rem;
+  height: 36rem;
+  top: -8rem;
+  left: -8rem;
+  background: radial-gradient(circle, rgba(123, 47, 190, 0.18) 0%, transparent 70%);
+  animation: aurora-drift-1 18s ease-in-out infinite;
+}
+
+.aurora-page::after {
+  width: 32rem;
+  height: 32rem;
+  right: -8rem;
+  bottom: -8rem;
+  background: radial-gradient(circle, rgba(0, 201, 167, 0.14) 0%, transparent 70%);
+  animation: aurora-drift-2 22s ease-in-out infinite;
+}
+
+.aurora-orb {
+  position: absolute;
+  width: 26rem;
+  height: 26rem;
+  top: 28%;
+  right: 10%;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(108, 99, 255, 0.12) 0%, transparent 70%);
+  filter: blur(50px);
+  animation: aurora-drift-3 26s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ── Simple blob divs (for landing page) ────────────────── */
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  animation: blob-drift 18s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Keyframes ───────────────────────────────────────────── */
+@keyframes aurora-drift-1 {
+  0%   { transform: translate(0px, 0px) scale(1); }
+  33%  { transform: translate(40px, -30px) scale(1.05); }
+  66%  { transform: translate(-20px, 20px) scale(0.97); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes aurora-drift-2 {
+  0%   { transform: translate(0px, 0px) scale(1); }
+  50%  { transform: translate(-50px, 40px) scale(1.08); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
+@keyframes aurora-drift-3 {
+  0%   { transform: translate(0px, 0px); }
+  40%  { transform: translate(30px, -50px); }
+  100% { transform: translate(0px, 0px); }
+}
+
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(30px, -20px) scale(1.05); }
+  66%       { transform: translate(-20px, 15px) scale(0.97); }
+}
+
+@keyframes agent-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes dash-flow {
+  to { stroke-dashoffset: -40; }
+}
+
+/* ── Typography helpers ─────────────────────────────────── */
+.section-title {
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.46);
+}
+
+.numeric {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+.font-serif-italic {
+  font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  font-style: italic;
+}
+
+/* ── Utility classes ────────────────────────────────────── */
+.glass-muted { color: rgba(255, 255, 255, 0.7); }
+
+.glass-soft  { background: rgba(255, 255, 255, 0.03); }
+
+.glass-pill {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(108, 99, 255, 0.35);
+  background: rgba(108, 99, 255, 0.12);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+.cursor::after {
+  content: "▋";
+  animation: cursor-blink 0.8s step-end infinite;
+  margin-left: 2px;
+  font-size: 0.7em;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 2px; }

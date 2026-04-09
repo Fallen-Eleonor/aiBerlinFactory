@@ -1,0 +1,988 @@
+{
+  "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+  "owner_id": "6838e5be-6f3f-41cb-bc21-2f1b558cdd6a",
+  "status": "completed",
+  "created_at": "2026-04-09T19:05:10.796207+00:00",
+  "request": {
+    "company_name": "dfdf",
+    "industry": "B2B SaaS",
+    "bundesland": "Berlin",
+    "founder_count": 2,
+    "available_capital_eur": 8000,
+    "goals": "Bootstrap and grow self-funded",
+    "founder_background": {
+      "university_affiliation": true,
+      "research_spinout": false,
+      "foreign_founder": false,
+      "employment_status": "full_time"
+    }
+  },
+  "events": [
+    {
+      "type": "job_started",
+      "timestamp": "2026-04-09T19:05:10.808176Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": null,
+      "message": "Startup OS analysis started.",
+      "detail": {
+        "phase": "intake",
+        "progress": 5
+      }
+    },
+    {
+      "type": "orchestrator_update",
+      "timestamp": "2026-04-09T19:05:10.819238Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": null,
+      "message": "Orchestrator is routing the founder brief across all specialist agents.",
+      "detail": {
+        "phase": "routing",
+        "progress": 10
+      }
+    },
+    {
+      "type": "agent_started",
+      "timestamp": "2026-04-09T19:05:10.820305Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "legal",
+      "message": "Checking German incorporation path",
+      "detail": {
+        "stage": "queued",
+        "progress": 20
+      }
+    },
+    {
+      "type": "agent_started",
+      "timestamp": "2026-04-09T19:05:10.821663Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "finance",
+      "message": "Modeling burn, runway, and funding options",
+      "detail": {
+        "stage": "queued",
+        "progress": 20
+      }
+    },
+    {
+      "type": "agent_started",
+      "timestamp": "2026-04-09T19:05:10.821982Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "hiring",
+      "message": "Planning the first team structure",
+      "detail": {
+        "stage": "queued",
+        "progress": 20
+      }
+    },
+    {
+      "type": "agent_started",
+      "timestamp": "2026-04-09T19:05:10.823626Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "ops",
+      "message": "Reviewing DSGVO and operating stack",
+      "detail": {
+        "stage": "queued",
+        "progress": 20
+      }
+    },
+    {
+      "type": "coordination_event",
+      "timestamp": "2026-04-09T19:05:10.891357Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "legal",
+      "message": "Entity route confirmed for Germany-first incorporation.",
+      "detail": {
+        "source": "legal",
+        "target": "orchestrator",
+        "offset_ms": 1400
+      }
+    },
+    {
+      "type": "agent_progress",
+      "timestamp": "2026-04-09T19:05:10.902684Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "legal",
+      "message": "Legal agent is evaluating UG vs. GmbH and notary readiness.",
+      "detail": {
+        "stage": "analyzing",
+        "progress": 45
+      }
+    },
+    {
+      "type": "agent_progress",
+      "timestamp": "2026-04-09T19:05:10.909502Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "finance",
+      "message": "Finance agent is calculating runway scenarios and public funding paths.",
+      "detail": {
+        "stage": "analyzing",
+        "progress": 45
+      }
+    },
+    {
+      "type": "agent_progress",
+      "timestamp": "2026-04-09T19:05:10.911943Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "hiring",
+      "message": "Hiring agent is mapping early roles, Werkstudent options, and labor-law flags.",
+      "detail": {
+        "stage": "analyzing",
+        "progress": 45
+      }
+    },
+    {
+      "type": "agent_progress",
+      "timestamp": "2026-04-09T19:05:10.913561Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "ops",
+      "message": "Ops agent is locking privacy, tooling, and launch compliance requirements.",
+      "detail": {
+        "stage": "analyzing",
+        "progress": 45
+      }
+    },
+    {
+      "type": "coordination_event",
+      "timestamp": "2026-04-09T19:05:10.982919Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "orchestrator",
+      "message": "Capital envelope locked, adjust runway and raise planning.",
+      "detail": {
+        "source": "orchestrator",
+        "target": "finance",
+        "offset_ms": 3200
+      }
+    },
+    {
+      "type": "agent_progress",
+      "timestamp": "2026-04-09T19:05:11.001062Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "legal",
+      "message": "Legal agent is refining the deterministic draft with Gemini.",
+      "detail": {
+        "provider": "gemini-langchain",
+        "model": "gemini-3-flash-preview",
+        "progress": 70
+      }
+    },
+    {
+      "type": "agent_progress",
+      "timestamp": "2026-04-09T19:05:11.562437Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "finance",
+      "message": "Finance agent is refining the deterministic draft with Gemini.",
+      "detail": {
+        "provider": "gemini-langchain",
+        "model": "gemini-3-flash-preview",
+        "progress": 70
+      }
+    },
+    {
+      "type": "agent_progress",
+      "timestamp": "2026-04-09T19:05:11.579599Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "hiring",
+      "message": "Hiring agent is refining the deterministic draft with Gemini.",
+      "detail": {
+        "provider": "gemini-langchain",
+        "model": "gemini-3-flash-preview",
+        "progress": 70
+      }
+    },
+    {
+      "type": "agent_progress",
+      "timestamp": "2026-04-09T19:05:11.585083Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "ops",
+      "message": "Ops agent is refining the deterministic draft with Gemini.",
+      "detail": {
+        "provider": "gemini-langchain",
+        "model": "gemini-3-flash-preview",
+        "progress": 70
+      }
+    },
+    {
+      "type": "coordination_event",
+      "timestamp": "2026-04-09T19:05:11.596321Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "finance",
+      "message": "Runway model ready with funding programme checks.",
+      "detail": {
+        "source": "finance",
+        "target": "orchestrator",
+        "offset_ms": 6000
+      }
+    },
+    {
+      "type": "coordination_event",
+      "timestamp": "2026-04-09T19:05:11.712570Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "orchestrator",
+      "message": "Budget approved for a lean first team and Werkstudent path.",
+      "detail": {
+        "source": "orchestrator",
+        "target": "hiring",
+        "offset_ms": 8300
+      }
+    },
+    {
+      "type": "coordination_event",
+      "timestamp": "2026-04-09T19:05:11.854148Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "hiring",
+      "message": "Org structure and labor-law flags assembled.",
+      "detail": {
+        "source": "hiring",
+        "target": "orchestrator",
+        "offset_ms": 11000
+      }
+    },
+    {
+      "type": "coordination_event",
+      "timestamp": "2026-04-09T19:05:11.961193Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "orchestrator",
+      "message": "Activate DSGVO, accounting, and launch stack recommendations.",
+      "detail": {
+        "source": "orchestrator",
+        "target": "ops",
+        "offset_ms": 13100
+      }
+    },
+    {
+      "type": "coordination_event",
+      "timestamp": "2026-04-09T19:05:12.103210Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "ops",
+      "message": "Compliance baseline and German tooling stack locked.",
+      "detail": {
+        "source": "ops",
+        "target": "orchestrator",
+        "offset_ms": 15900
+      }
+    },
+    {
+      "type": "coordination_event",
+      "timestamp": "2026-04-09T19:05:12.234739Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "orchestrator",
+      "message": "Synthesis complete, startup readiness score generated.",
+      "detail": {
+        "source": "orchestrator",
+        "target": "all",
+        "offset_ms": 18500
+      }
+    },
+    {
+      "type": "agent_completed",
+      "timestamp": "2026-04-09T19:05:17.039097Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "ops",
+      "message": "Ops agent finished.",
+      "detail": {
+        "stage": "complete",
+        "progress": 88
+      }
+    },
+    {
+      "type": "agent_completed",
+      "timestamp": "2026-04-09T19:05:17.153146Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "finance",
+      "message": "Finance agent finished.",
+      "detail": {
+        "stage": "complete",
+        "progress": 88
+      }
+    },
+    {
+      "type": "agent_completed",
+      "timestamp": "2026-04-09T19:05:17.406989Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "hiring",
+      "message": "Hiring agent finished.",
+      "detail": {
+        "stage": "complete",
+        "progress": 88
+      }
+    },
+    {
+      "type": "agent_completed",
+      "timestamp": "2026-04-09T19:05:18.069876Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": "legal",
+      "message": "Legal agent finished.",
+      "detail": {
+        "stage": "complete",
+        "progress": 88
+      }
+    },
+    {
+      "type": "orchestrator_update",
+      "timestamp": "2026-04-09T19:05:18.071118Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": null,
+      "message": "Orchestrator is synthesizing agent outputs into a single founder report.",
+      "detail": {
+        "phase": "synthesis",
+        "progress": 92
+      }
+    },
+    {
+      "type": "job_completed",
+      "timestamp": "2026-04-09T19:05:18.113465Z",
+      "job_id": "fb34a9d3835949ce906f6e3982271c0a",
+      "agent": null,
+      "message": "All agent results are ready.",
+      "detail": {
+        "health_score": 62,
+        "progress": 100
+      }
+    }
+  ],
+  "result": {
+    "overview": {
+      "recommended_entity": "UG (haftungsbeschraenkt)",
+      "runway_months_base": 1,
+      "health_score": 62,
+      "health_label": "IN PROGRESS",
+      "next_step": "EXIST application prep",
+      "next_milestone": "Extend runway with KfW-ready banking and accounting package",
+      "score_breakdown": [
+        {
+          "label": "Rechtsform",
+          "value": 72,
+          "weight": 25
+        },
+        {
+          "label": "Finanzen",
+          "value": 58,
+          "weight": 35
+        },
+        {
+          "label": "Team",
+          "value": 46,
+          "weight": 20
+        },
+        {
+          "label": "Betrieb",
+          "value": 74,
+          "weight": 20
+        }
+      ]
+    },
+    "legal": {
+      "recommended_entity": "UG (haftungsbeschraenkt)",
+      "reasoning": "With an initial capital of \u20ac8,000, the UG (haftungsbeschr\u00e4nkt) serves as the optimal legal framework for dfdf. It offers the same liability protection as a GmbH but with a significantly lower entry barrier, making it the most capital-efficient choice for a bootstrapped B2B SaaS. This structure allows the founders to allocate resources toward growth while retaining a clear path for a future conversion into a full GmbH once the statutory reserves reach \u20ac25,000.",
+      "entity_rationale": [
+        "Min. capital can stay low while preserving a later GmbH conversion path.",
+        "Formation costs remain lower than a full GmbH setup.",
+        "The team can validate demand before locking in a larger capital structure."
+      ],
+      "incorporation_steps": [
+        {
+          "title": "IHK Namenscheck",
+          "description": "Validate the company name for dfdf with the local IHK before the notary draft is finalized.",
+          "owner": "Founder + IHK",
+          "eta": "1-3 days",
+          "estimated_cost_eur": 0
+        },
+        {
+          "title": "Gesellschaftsvertrag",
+          "description": "Prepare the articles of association and shareholder structure for the notary appointment.",
+          "owner": "Founder + Notary",
+          "eta": "2-4 days",
+          "estimated_cost_eur": 250
+        },
+        {
+          "title": "Notartermin",
+          "description": "Sign the incorporation documents and management appointment with a German notary.",
+          "owner": "Founder + Notary",
+          "eta": "1 day",
+          "estimated_cost_eur": 650
+        },
+        {
+          "title": "Stammkapital",
+          "description": "Open the business account and complete the Lean initial capital deposit transfer before Handelsregister filing.",
+          "owner": "Founder + Bank",
+          "eta": "3-7 days",
+          "estimated_cost_eur": 0
+        },
+        {
+          "title": "Handelsregister",
+          "description": "The notary files the company with the Amtsgericht and the entity becomes active after registration.",
+          "owner": "Notary + Amtsgericht",
+          "eta": "2-6 weeks",
+          "estimated_cost_eur": 150
+        }
+      ],
+      "post_incorporation_checklist": [
+        {
+          "title": "Gewerbeanmeldung",
+          "description": "Register the trade locally in Berlin once Handelsregister entry is complete.",
+          "owner": "Founder + Gewerbeamt",
+          "eta": "1 day",
+          "estimated_cost_eur": 35
+        },
+        {
+          "title": "Finanzamt registration",
+          "description": "Submit the tax registration questionnaire and request the Steuernummer and USt-IdNr.",
+          "owner": "Founder + Finanzamt",
+          "eta": "1-2 weeks",
+          "estimated_cost_eur": 0
+        },
+        {
+          "title": "Business banking live",
+          "description": "Finalize cards, accounting connections, and expense flows after the capital deposit clears.",
+          "owner": "Founder + Bank",
+          "eta": "2-5 days",
+          "estimated_cost_eur": 0
+        },
+        {
+          "title": "Compliance pages",
+          "description": "Publish Impressum, Datenschutzerklaerung, and cookie consent before public launch.",
+          "owner": "Founder + Ops",
+          "eta": "1-2 days",
+          "estimated_cost_eur": 0
+        }
+      ],
+      "documents": [
+        "gesellschaftsvertrag.docx",
+        "founder-resolution-summary.txt",
+        "handelsregister-checklist.txt"
+      ],
+      "estimated_cost_eur": 900,
+      "estimated_weeks": 4,
+      "score": 72,
+      "narrative": "dfdf is positioned to initiate a streamlined incorporation process using the UG (haftungsbeschr\u00e4nkt) framework. This path ensures a capital-efficient entry into the German market, focusing on liability mitigation and professional B2B positioning. The process will move through a formal name verification with the IHK, followed by notarization and capital contribution, typically concluding within a four-week window to establish a robust corporate foundation in Berlin.",
+      "conversion_note": "Retain 25% of annual profits until the company reaches the EUR 25,000 level typically associated with a later GmbH conversion.",
+      "evidence": [
+        {
+          "title": "GmbHG and UG capital structure rules",
+          "issuer": "Bundesministerium der Justiz",
+          "rationale": "Anchors the UG versus GmbH recommendation in the German limited-liability company framework."
+        },
+        {
+          "title": "IHK name-check and registration guidance",
+          "issuer": "Industrie- und Handelskammer",
+          "rationale": "Supports the sequence around name validation, notary preparation, and register filing."
+        }
+      ],
+      "document_metadata": {
+        "path": "/Users/giorgi/Desktop/Programming/StartUps/startup-os/apps/backend/generated/fb34a9d3835949ce906f6e3982271c0a/gesellschaftsvertrag.docx",
+        "kind": "gesellschaftsvertrag"
+      }
+    },
+    "finance": {
+      "currency": "EUR",
+      "monthly_burn_eur": 8400,
+      "runway_months": {
+        "conservative": 1,
+        "base": 1,
+        "optimistic": 1
+      },
+      "scenarios": [
+        {
+          "label": "conservative",
+          "runway_months": 1,
+          "monthly_burn_eur": 9660,
+          "note": "Adds hiring and tooling sooner, compressing runway."
+        },
+        {
+          "label": "base",
+          "runway_months": 1,
+          "monthly_burn_eur": 8400,
+          "note": "Balanced path using the current plan and timing."
+        },
+        {
+          "label": "optimistic",
+          "runway_months": 1,
+          "monthly_burn_eur": 7140,
+          "note": "Assumes a leaner team ramp and tighter vendor spend."
+        }
+      ],
+      "recommended_raise_eur": 90000,
+      "recommended_raise_timing_month": 1,
+      "tax_notes": [
+        "Koerperschaftsteuer is generally 15% on profits.",
+        "Gewerbesteuer in the selected Bundesland is modeled at about 14%.",
+        "Employer social cost is modeled with a 20% uplift on gross salary.",
+        "Umsatzsteuer is usually 19%, with different handling if the company remains very small."
+      ],
+      "funding_programs": [
+        {
+          "name": "EXIST-Gruenderstipendium",
+          "eligible": true,
+          "max_amount_eur": 36000,
+          "summary": "Best fit for university-linked founders who need non-dilutive support before fundraising."
+        },
+        {
+          "name": "KfW StartGeld",
+          "eligible": true,
+          "max_amount_eur": 125000,
+          "summary": "Debt capital for young German companies that need early operating runway."
+        },
+        {
+          "name": "EIC Accelerator",
+          "eligible": false,
+          "max_amount_eur": 2500000,
+          "summary": "Relevant for deep-tech companies that can support an EU-scale innovation case."
+        },
+        {
+          "name": "HTGF readiness",
+          "eligible": false,
+          "max_amount_eur": 1000000,
+          "summary": "Signal that the company should prepare investor-facing materials for a German pre-seed process."
+        }
+      ],
+      "salary_benchmarks": [
+        {
+          "role": "Junior Developer",
+          "annual_gross_low_eur": 50000,
+          "annual_gross_high_eur": 58000,
+          "contract_type": "Full-time employee"
+        },
+        {
+          "role": "Senior Developer",
+          "annual_gross_low_eur": 80000,
+          "annual_gross_high_eur": 92000,
+          "contract_type": "Full-time employee"
+        },
+        {
+          "role": "Product Manager",
+          "annual_gross_low_eur": 70000,
+          "annual_gross_high_eur": 82000,
+          "contract_type": "Full-time employee"
+        },
+        {
+          "role": "Werkstudent",
+          "annual_gross_low_eur": 14400,
+          "annual_gross_high_eur": 18600,
+          "contract_type": "Werkstudent"
+        }
+      ],
+      "eligibility": {
+        "exist": true,
+        "kfw": true,
+        "eic": false,
+        "htgf": false
+      },
+      "chart_data": [
+        {
+          "month": 0,
+          "cash_base": 8000,
+          "cash_conservative": 8000,
+          "cash_optimistic": 8000
+        },
+        {
+          "month": 1,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 860
+        },
+        {
+          "month": 2,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 3,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 4,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 5,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 6,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 7,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 8,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 9,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 10,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 11,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 12,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 13,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 14,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 15,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 16,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 17,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 18,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 19,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 20,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 21,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 22,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 23,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        },
+        {
+          "month": 24,
+          "cash_base": 0,
+          "cash_conservative": 0,
+          "cash_optimistic": 0
+        }
+      ],
+      "assumptions": [
+        "Personnel expenses include a 20% employer social security contribution surcharge on top of gross salaries.",
+        "Runway calculations are based strictly on current cash reserves and do not factor in speculative early-stage revenue.",
+        "Local trade tax (Gewerbesteuer) for the Berlin jurisdiction is calculated at an effective rate of approximately 14%.",
+        "Eligibility for the EXIST-Gr\u00fcnderstipendium is predicated on maintaining an active link to your university's entrepreneurship network."
+      ],
+      "score": 58,
+      "narrative": "With a monthly burn rate of EUR 8,400 against a cash position of EUR 8,000, your current runway is critically limited to 1 month. While your primary goal is to bootstrap, the immediate liquidity gap necessitates a strategic capital injection. We recommend initiating a funding round of EUR 90,000 immediately (Month 1). Given your university affiliation, securing the EXIST-Gr\u00fcnderstipendium is a vital priority to provide non-dilutive runway and bridge the gap toward self-sustainability.",
+      "evidence": [
+        {
+          "title": "EXIST Gruenderstipendium programme rules",
+          "issuer": "Bundesministerium fuer Wirtschaft und Klimaschutz",
+          "rationale": "Supports non-dilutive funding eligibility logic for university-linked founders."
+        },
+        {
+          "title": "KfW StartGeld overview",
+          "issuer": "KfW",
+          "rationale": "Supports early debt-financing availability for young German companies."
+        },
+        {
+          "title": "Bundesland Gewerbesteuer assumptions",
+          "issuer": "Startup OS deterministic model",
+          "rationale": "Documents the location-based trade-tax rate used in the runway model."
+        }
+      ]
+    },
+    "hiring": {
+      "stage": "pre_incorporation",
+      "recommendation": "Maintain a strictly founder-led operation through the incorporation phase to preserve the limited \u20ac8,000 capital. Avoid high-commitment payroll; instead, utilize flexible, low-cost support roles like Werkstudierende or advisors to bridge operational gaps while focusing on initial B2B validation.",
+      "first_roles": [
+        {
+          "title": "Founder complement or advisor",
+          "priority": "now",
+          "contract_type": "Advisor agreement",
+          "annual_cost_low_eur": 6000,
+          "annual_cost_high_eur": 18000,
+          "rationale": "Cover legal or finance blind spots without committing to payroll before incorporation."
+        },
+        {
+          "title": "Werkstudent operations support",
+          "priority": "next",
+          "contract_type": "Werkstudent",
+          "annual_cost_low_eur": 14400,
+          "annual_cost_high_eur": 18600,
+          "rationale": "Low-cost support for research, admin, and founder enablement."
+        }
+      ],
+      "suggested_contract_types": [
+        "Advisor agreement",
+        "Werkstudent contract"
+      ],
+      "org_structure": [
+        {
+          "title": "Founder",
+          "reports_to": "Board",
+          "focus": "Customer discovery and incorporation"
+        },
+        {
+          "title": "External advisor",
+          "reports_to": "Founder",
+          "focus": "Finance or legal sparring"
+        }
+      ],
+      "employment_law_flags": [
+        {
+          "title": "Probezeit",
+          "severity": "info",
+          "description": "A probation period of up to 6 months is standard once full-time hiring starts."
+        },
+        {
+          "title": "Urlaubsanspruch",
+          "severity": "info",
+          "description": "The statutory minimum is 20 paid vacation days on a 5-day week."
+        }
+      ],
+      "milestones": [
+        "Finish incorporation before adding full-time payroll.",
+        "Use advisors or students for targeted support only.",
+        "Keep founder capacity focused on validation and not bureaucracy."
+      ],
+      "score": 46,
+      "narrative": "This bootstrapping strategy prioritizes capital preservation and operational agility. Given the pre-incorporation stage and lean funding, the focus is on minimizing fixed costs. By leveraging university-linked talent and advisory agreements, the founders can maintain momentum without the legal and financial risks associated with early full-time employment in the German market.",
+      "evidence": [
+        {
+          "title": "Werkstudent and probation norms",
+          "issuer": "German employment-law practice",
+          "rationale": "Explains why the first hiring plan favors student leverage and probationary caution."
+        },
+        {
+          "title": "Dismissal protection thresholds",
+          "issuer": "Kanzlei / labor-law guidance baseline",
+          "rationale": "Supports the warning around stricter employment protections as headcount rises."
+        }
+      ]
+    },
+    "ops": {
+      "dsgvo_checklist": [
+        {
+          "title": "Datenschutzerklaerung",
+          "description": "Publish a German-compliant privacy policy across the website and the product.",
+          "priority": "high",
+          "owner": "Ops + Legal"
+        },
+        {
+          "title": "Impressum",
+          "description": "Every public-facing German website needs a valid legal notice before launch.",
+          "priority": "high",
+          "owner": "Ops + Founder"
+        },
+        {
+          "title": "Cookie consent",
+          "description": "Configure opt-in consent for analytics and marketing cookies, not pre-checked banners.",
+          "priority": "high",
+          "owner": "Ops"
+        },
+        {
+          "title": "AVV with processors",
+          "description": "Sign data-processing agreements with each SaaS vendor that sees personal data.",
+          "priority": "high",
+          "owner": "Ops + Legal"
+        },
+        {
+          "title": "Processing register",
+          "description": "Maintain a Verzeichnis von Verarbeitungstaetigkeiten for core product and recruiting workflows.",
+          "priority": "medium",
+          "owner": "Ops"
+        },
+        {
+          "title": "DPO threshold",
+          "description": "Flag the Datenschutzbeauftragter requirement if more than 20 people process personal data regularly.",
+          "priority": "medium",
+          "owner": "Founder"
+        }
+      ],
+      "tool_stack": [
+        {
+          "category": "Accounting",
+          "tool": "DATEV",
+          "why": "Steuerberater-ready bookkeeping backbone for German reporting.",
+          "compliance_note": "Use DATEV export or direct integration from day one."
+        },
+        {
+          "category": "Accounting",
+          "tool": "Lexoffice",
+          "why": "Simple invoicing and bookkeeping for early-stage teams.",
+          "compliance_note": "Good bridge until the tax advisor wants fuller DATEV workflows."
+        },
+        {
+          "category": "Banking",
+          "tool": "Qonto",
+          "why": "Fast business banking with a German IBAN and clean team controls.",
+          "compliance_note": "Suitable for Stammkapital deposit and day-one operations."
+        },
+        {
+          "category": "Payroll",
+          "tool": "Personio",
+          "why": "Hiring, contracts, and payroll operations in one place.",
+          "compliance_note": "Pair with local legal review for contract templates."
+        },
+        {
+          "category": "Privacy",
+          "tool": "Usercentrics",
+          "why": "Widely used cookie consent platform with Germany-first posture.",
+          "compliance_note": "Configure opt-in by default for non-essential cookies."
+        }
+      ],
+      "required_setups": [
+        "EU-hosted backend and documented processor list",
+        "German IBAN business bank account for incorporation and operations",
+        "Accounting workflow that can export into DATEV",
+        "Published Impressum and privacy pages before launch"
+      ],
+      "e_invoicing_note": "Under the Growth Opportunities Act (Wachstumschancengesetz), German B2B entities must be capable of receiving structured electronic invoices (EN 16931 compliant) starting January 2025. dfdf should ensure their accounting stack natively supports ZUGFeRD or XRechnung formats to remain compliant with the upcoming mandatory e-invoicing regime.",
+      "compliance_highlights": [
+        "Germany expects opt-in cookie consent for non-essential tracking.",
+        "A DATEV-compatible accounting flow prevents pain with local tax advisors later.",
+        "B2B startups should be ready to receive e-invoices under the German 2025 regime."
+      ],
+      "score": 74,
+      "narrative": "For a Berlin-based B2B SaaS like dfdf, operational excellence starts with embedding GDPR compliance and DATEV-ready accounting into the core infrastructure from day one. By prioritizing these 'hygiene' factors early, the founding team can focus on self-funded growth without the risk of costly retroactive legal fixes or administrative friction during future scaling.",
+      "evidence": [
+        {
+          "title": "DSGVO controller and processor obligations",
+          "issuer": "European data-protection regime",
+          "rationale": "Supports the privacy checklist, AVV requirements, and processor inventory."
+        },
+        {
+          "title": "German B2B e-invoicing rollout",
+          "issuer": "Federal tax and invoicing guidance",
+          "rationale": "Supports the recommendation to choose accounting tools that can receive compliant e-invoices."
+        }
+      ]
+    },
+    "mission_log": [
+      {
+        "title": "Legal to Brain",
+        "message": "Entity route confirmed for Germany-first incorporation.",
+        "source": "legal",
+        "target": "orchestrator",
+        "offset_seconds": 1.4
+      },
+      {
+        "title": "Brain to Finance",
+        "message": "Capital envelope locked, adjust runway and raise planning.",
+        "source": "orchestrator",
+        "target": "finance",
+        "offset_seconds": 3.2
+      },
+      {
+        "title": "Finance to Brain",
+        "message": "Runway model ready with funding programme checks.",
+        "source": "finance",
+        "target": "orchestrator",
+        "offset_seconds": 6.0
+      },
+      {
+        "title": "Brain to Hiring",
+        "message": "Budget approved for a lean first team and Werkstudent path.",
+        "source": "orchestrator",
+        "target": "hiring",
+        "offset_seconds": 8.3
+      },
+      {
+        "title": "Hiring to Brain",
+        "message": "Org structure and labor-law flags assembled.",
+        "source": "hiring",
+        "target": "orchestrator",
+        "offset_seconds": 11.0
+      },
+      {
+        "title": "Brain to Ops",
+        "message": "Activate DSGVO, accounting, and launch stack recommendations.",
+        "source": "orchestrator",
+        "target": "ops",
+        "offset_seconds": 13.1
+      },
+      {
+        "title": "Ops to Brain",
+        "message": "Compliance baseline and German tooling stack locked.",
+        "source": "ops",
+        "target": "orchestrator",
+        "offset_seconds": 15.9
+      },
+      {
+        "title": "Brain to All",
+        "message": "Synthesis complete, startup readiness score generated.",
+        "source": "orchestrator",
+        "target": "all",
+        "offset_seconds": 18.5
+      }
+    ],
+    "downloads": [
+      {
+        "kind": "gesellschaftsvertrag",
+        "url": "/api/download/fb34a9d3835949ce906f6e3982271c0a/gesellschaftsvertrag"
+      },
+      {
+        "kind": "founder-resolution-summary",
+        "url": "/api/download/fb34a9d3835949ce906f6e3982271c0a/founder-resolution-summary"
+      },
+      {
+        "kind": "handelsregister-checklist",
+        "url": "/api/download/fb34a9d3835949ce906f6e3982271c0a/handelsregister-checklist"
+      }
+    ]
+  },
+  "task_state": {}
+}

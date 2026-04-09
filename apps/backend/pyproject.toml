@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "startup-os-backend"
+version = "0.1.0"
+description = "FastAPI backend for Startup OS"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "fastapi>=0.115.0,<1.0.0",
+  "uvicorn>=0.30.0,<1.0.0",
+  "langchain-core>=0.3.0,<1.0.0",
+  "langchain-google-genai>=2.1.0,<3.0.0",
+  "langgraph>=0.2.0,<1.0.0",
+  "python-docx>=1.1.2,<2.0.0",
+  "python-dotenv>=1.0.1,<2.0.0",
+  "pydantic>=2.9.0,<3.0.0",
+  "google-genai>=1.24.0,<2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0,<9.0.0",
+]
+
+[tool.setuptools]
+packages = ["app", "app.agents", "app.services", "app.tests"]
