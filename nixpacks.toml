@@ -1,15 +1,20 @@
-# 1. Указываем, какие инструменты должны быть в контейнере
+# 1. Среда (добавляем только нужное)
 [phases.setup]
 nixPkgs = ["nodejs", "python3", "bash"]
 
-# 2. Устанавливаем всё ДО запуска основного скрипта
+# 2. Установка зависимостей
 [phases.install]
 cmds = [
-  "npm install",                           # Установка в корне
-  "cd apps/frontend && npm install",       # Установка фронтенда
-  "cd apps/backend && python3 -m venv .venv && .venv/bin/pip install -e .[dev]" # Установка бэкенда
+  "npm install",
+  "cd apps/frontend && npm install",
+  "cd apps/backend && python3 -m venv .venv && .venv/bin/pip install -e .[dev]"
 ]
 
-# 3. Команда, которая запускает твой проект
+# 3. Сборка фронтенда (КРИТИЧЕСКИ ВАЖНО для роутинга)
+[phases.build]
+dependsOn = ["install"]
+cmds = ["cd apps/frontend && npm run build"]
+
+# 4. Запуск (используем start вместо dev скрипта для фронта)
 [start]
-cmd = "bash ./scripts/dev.sh"
+cmd = "cd apps/frontend && npm run start"
