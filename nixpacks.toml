@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = ["nodejs", "python3", "bash", "gcc", "libstdcxx5", "pkg-config", "glibc"]
+
+[phases.install]
+cmds = [
+  "npm install",
+  "cd apps/frontend && npm install",
+  "cd apps/backend && python3 -m venv .venv && .venv/bin/pip install -e .[dev] && .venv/bin/pip install uvicorn"
+]
+
+[phases.build]
+dependsOn = ["install"]
+cmds = ["cd apps/frontend && npm run build"]
+
+[start]
+cmd = "cd apps/backend && source .venv/bin/activate && (uvicorn app.main:app --host 0.0.0.0 --port 8000 & cd ../frontend && npm run start -- -p $PORT)"
