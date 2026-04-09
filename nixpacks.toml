@@ -5,7 +5,7 @@ nixPkgs = ["nodejs", "python3", "bash"]
 cmds = [
   "npm install",
   "cd apps/frontend && npm install",
-  "cd apps/backend && python3 -m venv .venv && .venv/bin/pip install -e .[dev]"
+  "cd apps/backend && python3 -m venv .venv && .venv/bin/pip install -e .[dev] && .venv/bin/pip install uvicorn"
 ]
 
 [phases.build]
@@ -13,7 +13,6 @@ dependsOn = ["install"]
 cmds = ["cd apps/frontend && npm run build"]
 
 [start]
-# 1. Активируем виртуальное окружение
-# 2. Запускаем бэкенд в фоновом режиме (&)
-# 3. Запускаем фронтенд на основном порту ($PORT)
-cmd = "source apps/backend/.venv/bin/activate && (python apps/backend/main.py & cd apps/frontend && npm run start -- -p $PORT)"
+# 1. Запускаем бэкенд из правильной папки на порту 8000
+# 2. Запускаем фронтенд на порту $PORT, который дал Railway
+cmd = "cd apps/backend && source .venv/bin/activate && (uvicorn app.main:app --host 0.0.0.0 --port 8000 & cd ../frontend && npm run start -- -p $PORT)"
