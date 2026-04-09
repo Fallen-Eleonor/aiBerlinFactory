@@ -1,0 +1,15 @@
+# 1. Указываем, какие инструменты должны быть в контейнере
+[phases.setup]
+nixPkgs = ["nodejs", "python3", "bash"]
+
+# 2. Устанавливаем всё ДО запуска основного скрипта
+[phases.install]
+cmds = [
+  "npm install",                           # Установка в корне
+  "cd apps/frontend && npm install",       # Установка фронтенда
+  "cd apps/backend && python3 -m venv .venv && .venv/bin/pip install -e .[dev]" # Установка бэкенда
+]
+
+# 3. Команда, которая запускает твой проект
+[start]
+cmd = "bash ./scripts/dev.sh"
