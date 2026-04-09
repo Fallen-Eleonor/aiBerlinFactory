@@ -37,7 +37,9 @@ def allowed_origins() -> list[str]:
     if configured:
         return [origin.strip() for origin in configured.split(",") if origin.strip()]
 
+    # Список доменов, которым мы доверяем (Локалка + твой Railway)
     return [
+        "https://efficient-blessing-production.up.railway.app",
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:3002",
@@ -63,14 +65,16 @@ DOWNLOAD_SPECS = {
 }
 
 app = FastAPI(title="Startup OS API", version="0.1.0")
+
+# --- ИСПРАВЛЕННЫЙ БЛОК CORS ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins(),
-    allow_credentials=False,
+    allow_credentials=True, # Включили для корректной работы браузеров
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+# ------------------------------
 
 @app.get("/health")
 async def health() -> dict[str, str]:
