@@ -25,6 +25,7 @@ export type FounderBackground = {
   employment_status: EmploymentStatus;
 };
 
+
 export type AnalyzeRequest = {
   company_name: string;
   industry: string;
@@ -33,6 +34,15 @@ export type AnalyzeRequest = {
   available_capital_eur: number;
   goals: string;
   founder_background: FounderBackground;
+};
+
+export type AgentInteraction = {
+  id: string;
+  agent_key: "legal" | "finance" | "hiring" | "ops";
+  title: string;
+  description: string;
+  status: "pending" | "completed" | "failed";
+  timestamp: string;
 };
 
 export type DemoPersona = {
