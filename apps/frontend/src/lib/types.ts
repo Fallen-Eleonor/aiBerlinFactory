@@ -39,10 +39,21 @@ export type AnalyzeRequest = {
 export type AgentInteraction = {
   agent: "legal" | "finance" | "hiring" | "ops";
   title: string;
-  state: string;     
-  kind: string;    
+  state: string;
+  kind: string;
+  question: string;
+  why_it_matters: string;
+  next_impact: string;
+  answer: string | number | boolean | null;
+  review_notes: string[]; 
+  field?: {
+    id: string;
+    label: string;
+    input_type: "text" | "number" | "select" | "boolean" | "textarea";
+    placeholder?: string | null;
+    options?: Array<{ label: string; value: string }>;
+  };
 };
-
 export type DemoPersona = {
   id: string;
   title: string;
