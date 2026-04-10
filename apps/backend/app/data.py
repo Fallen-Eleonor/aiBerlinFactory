@@ -19,7 +19,7 @@ GEWERBESTEUER_RATES = {
     "Sachsen": 15,
     "Sachsen-Anhalt": 14,
     "Schleswig-Holstein": 14,
-    "Thueringen": 14,
+    "Thueringen": 13,
 }
 
 BUNDESLAENDER = list(GEWERBESTEUER_RATES.keys())
