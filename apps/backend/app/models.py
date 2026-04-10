@@ -61,6 +61,23 @@ class JobTaskStatePayload(BaseModel):
     tasks: dict[str, bool] = Field(default_factory=dict)
 
 
+ChatRole = Literal["user", "assistant"]
+
+
+class ChatMessage(BaseModel):
+    role: ChatRole
+    content: str = Field(min_length=1, max_length=4_000)
+    created_at: datetime
+
+
+class JobChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=2_000)
+
+
+class JobChatHistoryPayload(BaseModel):
+    messages: list[ChatMessage] = Field(default_factory=list)
+
+
 class JobSummary(BaseModel):
     job_id: str
     status: str
@@ -88,6 +105,7 @@ class EvidenceReference(BaseModel):
     title: str
     issuer: str
     rationale: str
+    url: str | None = None
 
 
 class DownloadLink(BaseModel):
@@ -155,6 +173,33 @@ class FinanceOutput(BaseModel):
     assumptions: list[str]
     score: int
     narrative: str
+    evidence: list[EvidenceReference] = Field(default_factory=list)
+
+
+class CapTableAllocation(BaseModel):
+    holder: str
+    role: str
+    ownership_percent: float
+    notes: str
+
+
+class DilutionPreview(BaseModel):
+    round_name: str
+    pre_money_eur: int
+    new_money_eur: int
+    dilution_percent: float
+    founder_pool_post_raise_percent: float
+    notes: str
+
+
+class CapTableOutput(BaseModel):
+    entity_fit: str
+    summary: str
+    founder_pool_percent: float
+    option_pool_percent: float
+    advisor_pool_percent: float
+    allocations: list[CapTableAllocation]
+    dilution_preview: DilutionPreview
     evidence: list[EvidenceReference] = Field(default_factory=list)
 
 
@@ -245,6 +290,7 @@ class AnalysisResult(BaseModel):
     overview: OverviewOutput
     legal: LegalOutput
     finance: FinanceOutput
+    cap_table: CapTableOutput
     hiring: HiringOutput
     ops: OpsOutput
     mission_log: list[MissionLogEntry]

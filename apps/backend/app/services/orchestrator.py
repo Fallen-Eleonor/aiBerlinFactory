@@ -19,6 +19,7 @@ from app.models import (
     DownloadLink,
 )
 from app.services.ai import GeminiAgentService
+from app.services.cap_table import build_cap_table_output
 from app.services.documents import DocumentService
 from app.services.jobs import JobStore
 from app.services.overview import build_mission_log, build_overview
@@ -110,6 +111,7 @@ class Orchestrator:
             finance = resolved["finance"]
             hiring = resolved["hiring"]
             ops = resolved["ops"]
+            cap_table = build_cap_table_output(request, legal, finance)
 
             await self.job_store.publish(
                 job_id,
@@ -118,7 +120,7 @@ class Orchestrator:
                 detail={"phase": "synthesis", "progress": 92},
             )
 
-            generated_files = self.documents.generate_all(job_id, request, legal)
+            generated_files = self.documents.generate_all(job_id, request, legal, cap_table)
             document_path = generated_files["gesellschaftsvertrag"]
             legal.document_metadata = {
                 "path": str(document_path),
@@ -138,6 +140,7 @@ class Orchestrator:
                 overview=overview,
                 legal=legal,
                 finance=finance,
+                cap_table=cap_table,
                 hiring=hiring,
                 ops=ops,
                 mission_log=build_mission_log(),

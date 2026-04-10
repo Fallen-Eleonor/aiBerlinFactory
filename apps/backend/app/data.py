@@ -73,11 +73,13 @@ EVIDENCE_LIBRARY = {
             "title": "GmbHG and UG capital structure rules",
             "issuer": "Bundesministerium der Justiz",
             "rationale": "Anchors the UG versus GmbH recommendation in the German limited-liability company framework.",
+            "url": "https://www.gesetze-im-internet.de/gmbhg/",
         },
         {
             "title": "IHK name-check and registration guidance",
             "issuer": "Industrie- und Handelskammer",
             "rationale": "Supports the sequence around name validation, notary preparation, and register filing.",
+            "url": "https://www.ihk.de/",
         },
     ],
     "finance": [
@@ -85,16 +87,19 @@ EVIDENCE_LIBRARY = {
             "title": "EXIST Gruenderstipendium programme rules",
             "issuer": "Bundesministerium fuer Wirtschaft und Klimaschutz",
             "rationale": "Supports non-dilutive funding eligibility logic for university-linked founders.",
+            "url": "https://www.exist.de/",
         },
         {
             "title": "KfW StartGeld overview",
             "issuer": "KfW",
             "rationale": "Supports early debt-financing availability for young German companies.",
+            "url": "https://www.kfw.de/",
         },
         {
             "title": "Bundesland Gewerbesteuer assumptions",
             "issuer": "Startup OS deterministic model",
             "rationale": "Documents the location-based trade-tax rate used in the runway model.",
+            "url": None,
         },
     ],
     "hiring": [
@@ -102,11 +107,13 @@ EVIDENCE_LIBRARY = {
             "title": "Werkstudent and probation norms",
             "issuer": "German employment-law practice",
             "rationale": "Explains why the first hiring plan favors student leverage and probationary caution.",
+            "url": "https://www.personio.com/hr-lexicon/werkstudent/",
         },
         {
             "title": "Dismissal protection thresholds",
             "issuer": "Kanzlei / labor-law guidance baseline",
             "rationale": "Supports the warning around stricter employment protections as headcount rises.",
+            "url": "https://www.gesetze-im-internet.de/kschg/",
         },
     ],
     "ops": [
@@ -114,11 +121,13 @@ EVIDENCE_LIBRARY = {
             "title": "DSGVO controller and processor obligations",
             "issuer": "European data-protection regime",
             "rationale": "Supports the privacy checklist, AVV requirements, and processor inventory.",
+            "url": "https://gdpr-info.eu/",
         },
         {
             "title": "German B2B e-invoicing rollout",
             "issuer": "Federal tax and invoicing guidance",
             "rationale": "Supports the recommendation to choose accounting tools that can receive compliant e-invoices.",
+            "url": "https://www.bundesfinanzministerium.de/",
         },
     ],
 }

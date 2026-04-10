@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from app import main
 from app.models import AnalyzeRequest, FounderBackground
 from app.services.ai import GeminiAgentService
+from app.services.chat import DashboardChatService
 from app.services.jobs import JobStore
 from app.services.orchestrator import Orchestrator
 
@@ -40,6 +41,7 @@ def configure_test_app(tmp_path: Path) -> TestClient:
         generated_dir=generated_dir,
         agent_ai=main.agent_ai,
     )
+    main.chat_service = DashboardChatService(agent_ai=main.agent_ai, generated_dir=generated_dir)
     return TestClient(main.app)
 
 
@@ -74,6 +76,7 @@ def test_api_lifecycle_covers_result_history_tasks_and_downloads(tmp_path):
     assert result_payload["overview"]["health_label"] in {"INVESTMENT-BEREIT", "SEED-BEREIT", "IN PROGRESS", "FRUEHE PHASE"}
     assert len(result_payload["downloads"]) == 3
     assert len(result_payload["mission_log"]) > 0
+    assert result_payload["cap_table"]["option_pool_percent"] > 0
 
     request_response = client.get(f"/api/jobs/{job_id}/request{query}")
     assert request_response.status_code == 200
@@ -83,27 +86,48 @@ def test_api_lifecycle_covers_result_history_tasks_and_downloads(tmp_path):
 
     tasks_response = client.put(
         f"/api/jobs/{job_id}/tasks{query}",
-        json={"tasks": {"legal:IHK Namenscheck": True, "legal:Notartermin": False}},
+        json={"tasks": {"legal:incorporation:IHK Namenscheck": True, "legal:incorporation:Notartermin": False}},
     )
     assert tasks_response.status_code == 200
-    assert tasks_response.json()["tasks"]["legal:IHK Namenscheck"] is True
+    assert tasks_response.json()["tasks"]["legal:incorporation:IHK Namenscheck"] is True
 
     list_tasks_response = client.get(f"/api/jobs/{job_id}/tasks{query}")
     assert list_tasks_response.status_code == 200
-    assert list_tasks_response.json()["tasks"]["legal:Notartermin"] is False
+    assert list_tasks_response.json()["tasks"]["legal:incorporation:Notartermin"] is False
+    assert len(list_tasks_response.json()["tasks"]) == 15
 
     history_response = client.get(f"/api/jobs{query}")
     assert history_response.status_code == 200
     jobs = history_response.json()
     assert jobs[0]["job_id"] == job_id
     assert jobs[0]["completed_tasks"] == 1
-    assert jobs[0]["total_tasks"] == 2
+    assert jobs[0]["total_tasks"] == 15
 
     details_response = client.get(f"/api/jobs/{job_id}{query}")
     assert details_response.status_code == 200
     details_payload = details_response.json()
     assert details_payload["has_result"] is True
     assert details_payload["company_name"] == "Lifecycle Labs"
+
+    empty_chat_response = client.get(f"/api/jobs/{job_id}/chat{query}")
+    assert empty_chat_response.status_code == 200
+    assert empty_chat_response.json()["messages"] == []
+
+    chat_response = client.post(
+        f"/api/jobs/{job_id}/chat{query}",
+        json={"message": "What should I review before the notary?"},
+    )
+    assert chat_response.status_code == 200
+    chat_messages = chat_response.json()["messages"]
+    assert len(chat_messages) == 2
+    assert chat_messages[0]["role"] == "user"
+    assert "notary" in chat_messages[0]["content"].lower()
+    assert chat_messages[1]["role"] == "assistant"
+    assert len(chat_messages[1]["content"]) > 20
+
+    persisted_chat_response = client.get(f"/api/jobs/{job_id}/chat{query}")
+    assert persisted_chat_response.status_code == 200
+    assert len(persisted_chat_response.json()["messages"]) == 2
 
     for kind in [
         "gesellschaftsvertrag",
@@ -137,3 +161,5 @@ def test_api_scopes_job_history_by_client_id(tmp_path):
     assert hidden_result.status_code == 404
     hidden_download = client.get(f"/api/download/{job_id_b}/gesellschaftsvertrag?client_id=owner-a")
     assert hidden_download.status_code == 404
+    hidden_chat = client.get(f"/api/jobs/{job_id_b}/chat?client_id=owner-a")
+    assert hidden_chat.status_code == 404

@@ -75,6 +75,22 @@ export type JobTaskStatePayload = {
   tasks: Record<string, boolean>;
 };
 
+export type ChatRole = "user" | "assistant";
+
+export type ChatMessage = {
+  role: ChatRole;
+  content: string;
+  created_at: string;
+};
+
+export type JobChatRequest = {
+  message: string;
+};
+
+export type JobChatHistoryPayload = {
+  messages: ChatMessage[];
+};
+
 export type StatusEventType =
   | "job_started"
   | "orchestrator_update"
@@ -99,6 +115,7 @@ export type EvidenceReference = {
   title: string;
   issuer: string;
   rationale: string;
+  url?: string | null;
 };
 
 export type DownloadLink = {
@@ -171,6 +188,33 @@ export type FinanceOutput = {
   assumptions: string[];
   score: number;
   narrative: string;
+  evidence: EvidenceReference[];
+};
+
+export type CapTableAllocation = {
+  holder: string;
+  role: string;
+  ownership_percent: number;
+  notes: string;
+};
+
+export type DilutionPreview = {
+  round_name: string;
+  pre_money_eur: number;
+  new_money_eur: number;
+  dilution_percent: number;
+  founder_pool_post_raise_percent: number;
+  notes: string;
+};
+
+export type CapTableOutput = {
+  entity_fit: string;
+  summary: string;
+  founder_pool_percent: number;
+  option_pool_percent: number;
+  advisor_pool_percent: number;
+  allocations: CapTableAllocation[];
+  dilution_preview: DilutionPreview;
   evidence: EvidenceReference[];
 };
 
@@ -261,6 +305,7 @@ export type AnalysisResult = {
   overview: OverviewOutput;
   legal: LegalOutput;
   finance: FinanceOutput;
+  cap_table: CapTableOutput;
   hiring: HiringOutput;
   ops: OpsOutput;
   mission_log: MissionLogEntry[];

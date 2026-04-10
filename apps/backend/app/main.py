@@ -3,15 +3,27 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from fastapi import BackgroundTasks, FastAPI, Request
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from dotenv import load_dotenv
 
 from app.data import DEMO_PERSONAS
-from app.models import AnalyzeRequest, AnalysisResult, DemoPersona, JobDetails, JobSummary, JobTaskStatePayload, QueuedResponse
+from app.models import (
+    AnalyzeRequest,
+    AnalysisResult,
+    ChatMessage,
+    DemoPersona,
+    JobChatHistoryPayload,
+    JobChatRequest,
+    JobDetails,
+    JobSummary,
+    JobTaskStatePayload,
+    QueuedResponse,
+)
 from app.services.ai import GeminiAgentService
-from app.services.jobs import JobStore
+from app.services.chat import DashboardChatService
+from app.services.jobs import JobStore, now_utc
 from app.services.orchestrator import Orchestrator
 
 
@@ -26,6 +38,7 @@ load_dotenv(BASE_DIR / ".env")
 job_store = JobStore(storage_dir=JOBS_DIR)
 agent_ai = GeminiAgentService()
 orchestrator = Orchestrator(job_store=job_store, generated_dir=GENERATED_DIR, agent_ai=agent_ai)
+chat_service = DashboardChatService(agent_ai=agent_ai, generated_dir=GENERATED_DIR)
 
 
 def resolve_client_id(request: Request, client_id: str | None = None) -> str:
@@ -37,9 +50,7 @@ def allowed_origins() -> list[str]:
     if configured:
         return [origin.strip() for origin in configured.split(",") if origin.strip()]
 
-    # Список доменов, которым мы доверяем (Локалка + твой Railway)
     return [
-        "https://efficient-blessing-production.up.railway.app",
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:3002",
@@ -65,16 +76,14 @@ DOWNLOAD_SPECS = {
 }
 
 app = FastAPI(title="Startup OS API", version="0.1.0")
-
-# --- ИСПРАВЛЕННЫЙ БЛОК CORS ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins(),
-    allow_credentials=True, # Включили для корректной работы браузеров
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# ------------------------------
+
 
 @app.get("/health")
 async def health() -> dict[str, str]:
@@ -151,6 +160,40 @@ async def job_tasks(job_id: str, request: Request, client_id: str | None = None)
 async def update_job_tasks(job_id: str, payload: JobTaskStatePayload, request: Request, client_id: str | None = None) -> JobTaskStatePayload:
     job_store.get_job_for_owner(job_id, resolve_client_id(request, client_id))
     return JobTaskStatePayload(tasks=job_store.set_task_state(job_id, payload.tasks))
+
+
+@app.get("/api/jobs/{job_id}/chat", response_model=JobChatHistoryPayload)
+async def job_chat_history(job_id: str, request: Request, client_id: str | None = None) -> JobChatHistoryPayload:
+    job_store.get_job_for_owner(job_id, resolve_client_id(request, client_id))
+    return JobChatHistoryPayload(messages=job_store.get_chat_history(job_id))
+
+
+@app.post("/api/jobs/{job_id}/chat", response_model=JobChatHistoryPayload)
+async def job_chat(
+    job_id: str,
+    payload: JobChatRequest,
+    request: Request,
+    client_id: str | None = None,
+) -> JobChatHistoryPayload:
+    job = job_store.get_job_for_owner(job_id, resolve_client_id(request, client_id))
+    if job.result is None:
+        raise HTTPException(status_code=409, detail="Chat becomes available after the dashboard analysis is complete.")
+    if not payload.message.strip():
+        raise HTTPException(status_code=422, detail="Chat message cannot be empty.")
+
+    user_message = ChatMessage(role="user", content=payload.message.strip(), created_at=now_utc())
+    history = job_store.append_chat_message(job_id, user_message)
+    assistant_text = await chat_service.answer(
+        job_id=job_id,
+        prompt=user_message.content,
+        request=job.request,
+        result=job.result,
+        task_state=job.task_state,
+        history=history[:-1],
+    )
+    assistant_message = ChatMessage(role="assistant", content=assistant_text, created_at=now_utc())
+    history = job_store.append_chat_message(job_id, assistant_message)
+    return JobChatHistoryPayload(messages=history)
 
 
 @app.get("/api/download/{job_id}/{kind}")

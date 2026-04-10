@@ -2,7 +2,9 @@ import { getClientId } from "@/lib/client-id";
 import {
   AnalysisResult,
   AnalyzeRequest,
+  ChatMessage,
   DemoPersona,
+  JobChatHistoryPayload,
   JobDetails,
   JobQueuedResponse,
   JobSummary,
@@ -10,7 +12,23 @@ import {
   StatusEvent,
 } from "@/lib/types";
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const LOCAL_DEV_API_BASE_URL = "http://localhost:8000";
+
+function resolveApiBaseUrl() {
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return process.env.NEXT_PUBLIC_API_BASE_URL;
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    return LOCAL_DEV_API_BASE_URL;
+  }
+
+  throw new Error("NEXT_PUBLIC_API_BASE_URL is required in production. Point it to your deployed backend.");
+}
+
+function toApiUrl(path: string) {
+  return `${resolveApiBaseUrl()}${path}`;
+}
 
 type FetchOptions = Omit<RequestInit, "headers"> & {
   headers?: HeadersInit;
@@ -18,14 +36,15 @@ type FetchOptions = Omit<RequestInit, "headers"> & {
 };
 
 function withQuery(url: string, clientId: string) {
-  const resolved = new URL(url, API_BASE_URL);
+  const baseUrl = resolveApiBaseUrl();
+  const resolved = new URL(url, baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`);
   resolved.searchParams.set("client_id", clientId);
   return resolved.toString();
 }
 
 async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
   const clientId = options.clientId ?? getClientId();
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(toApiUrl(path), {
     ...options,
     headers: {
       "x-startup-os-client-id": clientId,
@@ -84,9 +103,26 @@ export async function updateJobTasks(jobId: string, tasks: Record<string, boolea
   });
 }
 
+export async function fetchJobChat(jobId: string, clientId?: string): Promise<ChatMessage[]> {
+  const payload = await apiFetch<JobChatHistoryPayload>(`/api/jobs/${jobId}/chat`, { clientId });
+  return payload.messages;
+}
+
+export async function sendJobChatMessage(jobId: string, message: string, clientId?: string): Promise<ChatMessage[]> {
+  const payload = await apiFetch<JobChatHistoryPayload>(`/api/jobs/${jobId}/chat`, {
+    method: "POST",
+    clientId,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message }),
+  });
+  return payload.messages;
+}
+
 export async function fetchResult(jobId: string, clientId?: string): Promise<AnalysisResult | null> {
   const resolvedClientId = clientId ?? getClientId();
-  const response = await fetch(`${API_BASE_URL}/api/result/${jobId}`, {
+  const response = await fetch(toApiUrl(`/api/result/${jobId}`), {
     cache: "no-store",
     headers: {
       "x-startup-os-client-id": resolvedClientId,

@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from fastapi import HTTPException
 
-from app.models import AnalysisResult, AnalyzeRequest, EventPayload
+from app.models import AnalysisResult, AnalyzeRequest, ChatMessage, EventPayload
 from app.models import JobSummary
 
 
@@ -19,6 +19,27 @@ def now_utc() -> datetime:
 
 
 TERMINAL_JOB_STATUSES = {"completed", "failed"}
+
+
+def default_task_state(result: AnalysisResult | None) -> dict[str, bool]:
+    if result is None:
+        return {}
+
+    keys: dict[str, bool] = {}
+    for item in result.legal.incorporation_steps:
+        keys[f"legal:incorporation:{item.title}"] = False
+    for item in result.legal.post_incorporation_checklist:
+        keys[f"legal:post:{item.title}"] = False
+    for item in result.ops.dsgvo_checklist:
+        keys[f"ops:dsgvo:{item.title}"] = False
+    return keys
+
+
+def merge_task_state(existing: dict[str, bool], result: AnalysisResult | None) -> dict[str, bool]:
+    merged = default_task_state(result)
+    for key, value in existing.items():
+        merged[key] = bool(value)
+    return merged
 
 
 @dataclass
@@ -32,6 +53,7 @@ class JobRecord:
     subscribers: list[asyncio.Queue[EventPayload]] = field(default_factory=list)
     result: AnalysisResult | None = None
     task_state: dict[str, bool] = field(default_factory=dict)
+    chat_history: list[ChatMessage] = field(default_factory=list)
 
 
 class JobStore:
@@ -112,6 +134,7 @@ class JobStore:
         job = self.get_job(job_id)
         job.result = result
         job.status = "completed"
+        job.task_state = merge_task_state(job.task_state, result)
         self._persist_job(job)
 
     def set_failed(self, job_id: str) -> None:
@@ -124,9 +147,21 @@ class JobStore:
 
     def set_task_state(self, job_id: str, tasks: dict[str, bool]) -> dict[str, bool]:
         job = self.get_job(job_id)
-        job.task_state = dict(tasks)
+        merged = merge_task_state(job.task_state, job.result)
+        for key, value in tasks.items():
+            merged[str(key)] = bool(value)
+        job.task_state = merged
         self._persist_job(job)
         return dict(job.task_state)
+
+    def get_chat_history(self, job_id: str) -> list[ChatMessage]:
+        return list(self.get_job(job_id).chat_history)
+
+    def append_chat_message(self, job_id: str, message: ChatMessage) -> list[ChatMessage]:
+        job = self.get_job(job_id)
+        job.chat_history.append(message)
+        self._persist_job(job)
+        return list(job.chat_history)
 
     async def stream(self, job_id: str) -> AsyncIterator[str]:
         job = self._jobs.get(job_id)
@@ -167,6 +202,7 @@ class JobStore:
             "events": [event.model_dump(mode="json") for event in job.events],
             "result": job.result.model_dump(mode="json") if job.result else None,
             "task_state": job.task_state,
+            "chat_history": [message.model_dump(mode="json") for message in job.chat_history],
         }
         path = self._job_path(job.job_id)
         tmp_path = path.with_suffix(".json.tmp")
@@ -189,6 +225,7 @@ class JobStore:
                     str(key): bool(value)
                     for key, value in payload.get("task_state", {}).items()
                 }
+                chat_history = [ChatMessage.model_validate(message) for message in payload.get("chat_history", [])]
 
                 if result is None and status not in TERMINAL_JOB_STATUSES:
                     status = "failed"
@@ -211,7 +248,8 @@ class JobStore:
                     created_at=created_at,
                     events=events,
                     result=result,
-                    task_state=task_state,
+                    task_state=merge_task_state(task_state, result),
+                    chat_history=chat_history,
                 )
                 self._jobs[job_id] = job
                 self._persist_job(job)

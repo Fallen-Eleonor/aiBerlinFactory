@@ -15,6 +15,7 @@ import {
 import { getClientId } from "@/lib/client-id";
 import { AnalyzeRequest, AnalysisResult, JobDetails, JobSummary, StatusEvent } from "@/lib/types";
 import { ResultsTabs } from "@/components/results-tabs";
+import { DashboardChat } from "@/components/dashboard-chat";
 import { WarRoom } from "@/components/war-room";
 
 const initialAgentStates = {
@@ -55,6 +56,24 @@ function displayScoreLabel(label: string) {
   if (label === "Finanzen") return "Finance";
   if (label === "Betrieb") return "Operations";
   return label;
+}
+
+function biggestRisk(result: AnalysisResult, jobRequest: AnalyzeRequest | null) {
+  if (result.finance.runway_months.base <= 4) {
+    return "Short runway before the next financing milestone.";
+  }
+  if (jobRequest?.founder_background.foreign_founder) {
+    return "Cross-border founder setup can slow banking and notarization.";
+  }
+  if (result.ops.score < 72) {
+    return "Compliance setup still needs tightening before launch.";
+  }
+  return "The first hiring wave must stay disciplined to preserve runway.";
+}
+
+function bestFundingPath(result: AnalysisResult) {
+  const eligibleProgram = result.finance.funding_programs.find((program) => program.eligible);
+  return eligibleProgram?.name ?? "Investor-led pre-seed round";
 }
 
 export function DashboardShell({ jobId }: { jobId: string }) {
@@ -303,7 +322,7 @@ export function DashboardShell({ jobId }: { jobId: string }) {
               <p className="section-title">Executive summary</p>
               <h2 className="mt-2 text-3xl font-semibold">{result.overview.recommended_entity}</h2>
               <p className="glass-muted mt-4 max-w-2xl text-sm leading-7">{result.legal.narrative}</p>
-              <div className="mt-6 grid gap-4 md:grid-cols-4">
+              <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <div className="glass-soft rounded-[1.5rem] p-4">
                   <p className="section-title">Runway</p>
                   <p className="numeric mt-2 text-2xl font-semibold">{result.overview.runway_months_base} months</p>
@@ -319,6 +338,14 @@ export function DashboardShell({ jobId }: { jobId: string }) {
                 <div className="glass-soft rounded-[1.5rem] p-4">
                   <p className="section-title">Next milestone</p>
                   <p className="mt-2 text-sm font-semibold">{result.overview.next_milestone}</p>
+                </div>
+                <div className="glass-soft rounded-[1.5rem] p-4">
+                  <p className="section-title">Best funding path</p>
+                  <p className="mt-2 text-sm font-semibold">{bestFundingPath(result)}</p>
+                </div>
+                <div className="glass-soft rounded-[1.5rem] p-4">
+                  <p className="section-title">Biggest risk</p>
+                  <p className="mt-2 text-sm font-semibold">{biggestRisk(result, jobRequest)}</p>
                 </div>
               </div>
             </div>
@@ -352,6 +379,8 @@ export function DashboardShell({ jobId }: { jobId: string }) {
               </div>
             </div>
           </section>
+
+          <DashboardChat jobId={jobId} companyName={companyName} enabled={Boolean(result)} />
 
           <ResultsTabs result={result} tasks={tasks} onTaskToggle={handleTaskToggle} />
 
