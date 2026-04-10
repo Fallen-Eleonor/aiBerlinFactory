@@ -37,12 +37,10 @@ export type AnalyzeRequest = {
 };
 
 export type AgentInteraction = {
-  id: string;
-  agent_key: "legal" | "finance" | "hiring" | "ops";
+  agent: "legal" | "finance" | "hiring" | "ops";
   title: string;
-  description: string;
-  status: "pending" | "completed" | "failed";
-  timestamp: string;
+  state: string;     
+  kind: string;    
 };
 
 export type DemoPersona = {
