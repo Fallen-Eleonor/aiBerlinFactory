@@ -49,6 +49,7 @@ def allowed_origins() -> list[str]:
         return [origin.strip() for origin in configured.split(",") if origin.strip()]
 
     return [
+        "https://efficient-blessing-production.up.railway.app",
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:3002",
