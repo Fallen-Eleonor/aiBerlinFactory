@@ -4,13 +4,13 @@ import os
 import asyncio
 from typing import Any, TypeVar
 
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.graph import END, START, StateGraph
 from pydantic import BaseModel
 from typing_extensions import TypedDict
 
-from app.models import AnalyzeRequest, FinanceOutput, HiringOutput, LegalOutput, OpsOutput
+from app.models import AnalysisResult, AnalyzeRequest, ChatMessage, FinanceOutput, HiringOutput, LegalOutput, OpsOutput
 
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
@@ -113,6 +113,56 @@ class GeminiAgentService:
         output.narrative = patch.narrative
         output.e_invoicing_note = patch.e_invoicing_note
         return output
+
+    async def answer_dashboard_chat(
+        self,
+        *,
+        prompt: str,
+        request: AnalyzeRequest,
+        result: AnalysisResult,
+        task_state: dict[str, bool],
+        history: list[ChatMessage],
+        document_context: str,
+    ) -> str:
+        if not self.enabled:
+            raise RuntimeError("Gemini is not configured.")
+
+        messages: list[Any] = [
+            SystemMessage(
+                content=(
+                    "You are Startup OS Copilot, an AI dashboard assistant for startup founders. "
+                    "Answer only from the provided startup brief, analysis result, task state, and generated documents. "
+                    "Be practical and concise. If the context is incomplete, say so explicitly. "
+                    "Do not claim to be a law firm or give definitive legal advice; frame legal answers as operational guidance and recommend a lawyer or notary when appropriate."
+                )
+            ),
+            SystemMessage(
+                content=(
+                    f"Startup brief:\n{request.model_dump_json(indent=2)}\n\n"
+                    f"Analysis result:\n{result.model_dump_json(indent=2)}\n\n"
+                    f"Task state:\n{task_state}\n\n"
+                    f"Generated documents:\n{document_context}"
+                )
+            ),
+        ]
+        for message in history[-8:]:
+            if message.role == "assistant":
+                messages.append(AIMessage(content=message.content))
+            else:
+                messages.append(HumanMessage(content=message.content))
+        messages.append(HumanMessage(content=prompt))
+
+        response = await asyncio.wait_for(
+            self._build_llm().ainvoke(messages),
+            timeout=self.timeout_seconds,
+        )
+        content = response.content
+        if isinstance(content, str):
+            return content.strip()
+        if isinstance(content, list):
+            text_parts = [part.get("text", "") for part in content if isinstance(part, dict)]
+            return "\n".join(part for part in text_parts if part).strip()
+        return str(content).strip()
 
     async def _generate_json(self, system_instruction: str, prompt: str, response_schema: type[ModelT]) -> ModelT:
         if not self.enabled:

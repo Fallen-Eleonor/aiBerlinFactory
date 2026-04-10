@@ -7,6 +7,7 @@ from app.agents.hiring import build_hiring_output
 from app.agents.legal import build_legal_output
 from app.agents.ops import build_ops_output
 from app.models import AnalysisResult, AnalyzeRequest, DownloadLink, FounderBackground
+from app.services.cap_table import build_cap_table_output
 from app.services.jobs import JobStore, now_utc
 from app.services.overview import build_mission_log, build_overview
 
@@ -33,6 +34,7 @@ def build_result(request: AnalyzeRequest, job_id: str) -> AnalysisResult:
     finance = build_finance_output(request)
     hiring = build_hiring_output(request)
     ops = build_ops_output(request)
+    cap_table = build_cap_table_output(request, legal, finance)
     overview = build_overview(
         recommended_entity=legal.recommended_entity,
         runway_months_base=finance.runway_months["base"],
@@ -46,6 +48,7 @@ def build_result(request: AnalyzeRequest, job_id: str) -> AnalysisResult:
         overview=overview,
         legal=legal,
         finance=finance,
+        cap_table=cap_table,
         hiring=hiring,
         ops=ops,
         mission_log=build_mission_log(),
@@ -66,7 +69,9 @@ def test_job_store_persists_completed_results(tmp_path):
     assert loaded.status == "completed"
     assert loaded.result is not None
     assert loaded.result.legal.recommended_entity == "GmbH"
+    assert loaded.result.cap_table.option_pool_percent > 0
     assert loaded.events[0].message == "Analysis started."
+    assert len(loaded.task_state) == 15
 
 
 def test_job_store_marks_interrupted_jobs_as_failed(tmp_path):

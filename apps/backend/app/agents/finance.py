@@ -25,22 +25,31 @@ def monthly_cost_from_roles(roles: tuple[str, ...]) -> int:
     return int(annual_gross * EMPLOYER_LOAD / 12)
 
 
+def deep_tech_company(request: AnalyzeRequest) -> bool:
+    return deep_tech_intent(request.industry, request.goals)
+
+
 def estimate_salary_budget(request: AnalyzeRequest) -> int:
     stage = stage_for_request(request)
+    founder_count_adjustment = max(request.founder_count - 1, 0)
+
     if stage == "seed_ready":
-        return monthly_cost_from_roles(("Senior Developer", "Product Manager", "Data or ML Engineer"))
+        base = 5_800 + founder_count_adjustment * 800
+        if deep_tech_company(request):
+            base += 1_000
+        return base
     if stage == "structured_bootstrap":
-        return monthly_cost_from_roles(("Junior Developer", "Operations Manager", "Werkstudent"))
-    return monthly_cost_from_roles(("Junior Developer", "Werkstudent"))
+        return 2_300 + founder_count_adjustment * 450
+    return 850 + founder_count_adjustment * 200
 
 
 def fixed_costs(request: AnalyzeRequest) -> int:
     stage = stage_for_request(request)
     if stage == "seed_ready":
-        return 4_400
-    if stage == "structured_bootstrap":
         return 2_200
-    return 1_350
+    if stage == "structured_bootstrap":
+        return 1_400
+    return 700
 
 
 def compute_monthly_burn(request: AnalyzeRequest) -> int:
@@ -70,7 +79,7 @@ def build_chart_data(capital: int, burn: int) -> list[dict[str, int]]:
 
 
 def eligibility(request: AnalyzeRequest) -> dict[str, bool]:
-    deep_tech = deep_tech_intent(request.industry, request.goals)
+    deep_tech = deep_tech_company(request)
     return {
         "exist": request.founder_background.university_affiliation and request.available_capital_eur < 25_000,
         "kfw": request.available_capital_eur <= 125_000,
@@ -147,6 +156,7 @@ def build_finance_output(request: AnalyzeRequest) -> FinanceOutput:
     assumptions = [
         "Employer costs use a 20% load on gross salary.",
         "Runway is modeled against available cash only and excludes revenue upside.",
+        "Hiring burn uses phased hiring timing rather than assuming every benchmark role starts on day one.",
         f"Gewerbesteuer for {request.bundesland} is modeled at roughly {trade_tax}%.",
     ]
 

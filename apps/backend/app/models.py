@@ -35,7 +35,7 @@ class FounderBackground(BaseModel):
 
 
 class AnalyzeRequest(BaseModel):
-    company_name: str = Field(min_length=1, max_length=120)
+    company_name: str = Field(min_length=2, max_length=120)
     industry: str = Field(min_length=2, max_length=120)
     bundesland: Bundesland
     founder_count: int = Field(ge=1, le=10)
@@ -61,51 +61,21 @@ class JobTaskStatePayload(BaseModel):
     tasks: dict[str, bool] = Field(default_factory=dict)
 
 
-class InteractionFieldOption(BaseModel):
-    label: str
-    value: str
+ChatRole = Literal["user", "assistant"]
 
 
-class InteractionField(BaseModel):
-    id: str
-    label: str
-    input_type: Literal["text", "textarea", "select", "boolean", "number"]
-    placeholder: str | None = None
-    options: list[InteractionFieldOption] = Field(default_factory=list)
-
-
-class AgentInteraction(BaseModel):
-    id: str
-    agent: Literal["legal", "finance", "hiring", "ops"]
-    kind: Literal["input", "review", "approval"]
-    state: Literal["open", "answered", "approved", "completed"]
-    title: str
-    question: str
-    why_it_matters: str
-    next_impact: str
-    context_key: str | None = None
-    rerun_targets: list[str] = Field(default_factory=list)
-    artifact_targets: list[str] = Field(default_factory=list)
-    field: InteractionField | None = None
-    review_notes: list[str] = Field(default_factory=list)
-    linked_download_kind: str | None = None
-    answer: str | int | bool | None = None
+class ChatMessage(BaseModel):
+    role: ChatRole
+    content: str = Field(min_length=1, max_length=4_000)
     created_at: datetime
-    answered_at: datetime | None = None
 
 
-class JobInteractionListPayload(BaseModel):
-    interactions: list[AgentInteraction] = Field(default_factory=list)
+class JobChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=2_000)
 
 
-class InteractionAnswerPayload(BaseModel):
-    value: str | int | bool
-
-
-class InteractionAnswerResponse(BaseModel):
-    status: Literal["accepted"]
-    interaction: AgentInteraction
-    result: "AnalysisResult"
+class JobChatHistoryPayload(BaseModel):
+    messages: list[ChatMessage] = Field(default_factory=list)
 
 
 class JobSummary(BaseModel):
@@ -135,6 +105,7 @@ class EvidenceReference(BaseModel):
     title: str
     issuer: str
     rationale: str
+    url: str | None = None
 
 
 class DownloadLink(BaseModel):
@@ -202,6 +173,33 @@ class FinanceOutput(BaseModel):
     assumptions: list[str]
     score: int
     narrative: str
+    evidence: list[EvidenceReference] = Field(default_factory=list)
+
+
+class CapTableAllocation(BaseModel):
+    holder: str
+    role: str
+    ownership_percent: float
+    notes: str
+
+
+class DilutionPreview(BaseModel):
+    round_name: str
+    pre_money_eur: int
+    new_money_eur: int
+    dilution_percent: float
+    founder_pool_post_raise_percent: float
+    notes: str
+
+
+class CapTableOutput(BaseModel):
+    entity_fit: str
+    summary: str
+    founder_pool_percent: float
+    option_pool_percent: float
+    advisor_pool_percent: float
+    allocations: list[CapTableAllocation]
+    dilution_preview: DilutionPreview
     evidence: list[EvidenceReference] = Field(default_factory=list)
 
 
@@ -292,6 +290,7 @@ class AnalysisResult(BaseModel):
     overview: OverviewOutput
     legal: LegalOutput
     finance: FinanceOutput
+    cap_table: CapTableOutput
     hiring: HiringOutput
     ops: OpsOutput
     mission_log: list[MissionLogEntry]

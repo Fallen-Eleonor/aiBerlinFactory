@@ -12,17 +12,18 @@ from app.data import DEMO_PERSONAS
 from app.models import (
     AnalyzeRequest,
     AnalysisResult,
+    ChatMessage,
     DemoPersona,
-    InteractionAnswerPayload,
-    InteractionAnswerResponse,
+    JobChatHistoryPayload,
+    JobChatRequest,
     JobDetails,
-    JobInteractionListPayload,
     JobSummary,
     JobTaskStatePayload,
     QueuedResponse,
 )
 from app.services.ai import GeminiAgentService
-from app.services.jobs import JobStore
+from app.services.chat import DashboardChatService
+from app.services.jobs import JobStore, now_utc
 from app.services.orchestrator import Orchestrator
 
 
@@ -37,6 +38,7 @@ load_dotenv(BASE_DIR / ".env")
 job_store = JobStore(storage_dir=JOBS_DIR)
 agent_ai = GeminiAgentService()
 orchestrator = Orchestrator(job_store=job_store, generated_dir=GENERATED_DIR, agent_ai=agent_ai)
+chat_service = DashboardChatService(agent_ai=agent_ai, generated_dir=GENERATED_DIR)
 
 
 def resolve_client_id(request: Request, client_id: str | None = None) -> str:
@@ -161,26 +163,38 @@ async def update_job_tasks(job_id: str, payload: JobTaskStatePayload, request: R
     return JobTaskStatePayload(tasks=job_store.set_task_state(job_id, payload.tasks))
 
 
-@app.get("/api/jobs/{job_id}/interactions", response_model=JobInteractionListPayload)
-async def job_interactions(job_id: str, request: Request, client_id: str | None = None) -> JobInteractionListPayload:
+@app.get("/api/jobs/{job_id}/chat", response_model=JobChatHistoryPayload)
+async def job_chat_history(job_id: str, request: Request, client_id: str | None = None) -> JobChatHistoryPayload:
     job_store.get_job_for_owner(job_id, resolve_client_id(request, client_id))
-    return JobInteractionListPayload(interactions=orchestrator.ensure_interactions(job_id))
+    return JobChatHistoryPayload(messages=job_store.get_chat_history(job_id))
 
 
-@app.post("/api/jobs/{job_id}/interactions/{interaction_id}/answer", response_model=InteractionAnswerResponse)
-async def answer_interaction(
+@app.post("/api/jobs/{job_id}/chat", response_model=JobChatHistoryPayload)
+async def job_chat(
     job_id: str,
-    interaction_id: str,
-    payload: InteractionAnswerPayload,
+    payload: JobChatRequest,
     request: Request,
     client_id: str | None = None,
-) -> InteractionAnswerResponse:
-    job_store.get_job_for_owner(job_id, resolve_client_id(request, client_id))
-    try:
-        interaction, result = await orchestrator.answer_interaction(job_id, interaction_id, payload.value)
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error)) from error
-    return InteractionAnswerResponse(status="accepted", interaction=interaction, result=result)
+) -> JobChatHistoryPayload:
+    job = job_store.get_job_for_owner(job_id, resolve_client_id(request, client_id))
+    if job.result is None:
+        raise HTTPException(status_code=409, detail="Chat becomes available after the dashboard analysis is complete.")
+    if not payload.message.strip():
+        raise HTTPException(status_code=422, detail="Chat message cannot be empty.")
+
+    user_message = ChatMessage(role="user", content=payload.message.strip(), created_at=now_utc())
+    history = job_store.append_chat_message(job_id, user_message)
+    assistant_text = await chat_service.answer(
+        job_id=job_id,
+        prompt=user_message.content,
+        request=job.request,
+        result=job.result,
+        task_state=job.task_state,
+        history=history[:-1],
+    )
+    assistant_message = ChatMessage(role="assistant", content=assistant_text, created_at=now_utc())
+    history = job_store.append_chat_message(job_id, assistant_message)
+    return JobChatHistoryPayload(messages=history)
 
 
 @app.get("/api/download/{job_id}/{kind}")

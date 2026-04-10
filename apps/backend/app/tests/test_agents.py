@@ -1,6 +1,7 @@
 from app.agents.finance import build_finance_output, compute_monthly_burn
 from app.agents.legal import build_legal_output
 from app.models import AnalyzeRequest, FounderBackground
+from app.services.cap_table import build_cap_table_output
 from app.services.overview import build_overview
 
 
@@ -37,6 +38,11 @@ def test_finance_applies_employer_load_and_fixed_costs():
     assert burn > 1_150
 
 
+def test_finance_runway_is_more_presentation_friendly_for_bootstrapped_case():
+    result = build_finance_output(make_request())
+    assert result.runway_months["base"] >= 4
+
+
 def test_finance_eligibility_detects_exist_and_kfw():
     result = build_finance_output(make_request())
     assert result.eligibility["exist"] is True
@@ -67,3 +73,14 @@ def test_overview_uses_weighted_scores_and_exist_next_step():
     assert overview.health_score == 66
     assert overview.health_label == "IN PROGRESS"
     assert overview.next_step == "EXIST application prep"
+
+
+def test_cap_table_reserves_option_pool_and_founder_control():
+    request = make_request(founder_count=2, available_capital_eur=50_000, goals="Raise a seed round immediately")
+    legal = build_legal_output(request)
+    finance = build_finance_output(request)
+    result = build_cap_table_output(request, legal, finance)
+
+    assert result.option_pool_percent >= 8
+    assert result.founder_pool_percent > result.option_pool_percent
+    assert len(result.allocations) == 2

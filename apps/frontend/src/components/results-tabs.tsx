@@ -9,6 +9,7 @@ import { AnalysisResult, EvidenceReference, LegalChecklistItem } from "@/lib/typ
 const tabs = [
   { key: "legal", label: "Entity" },
   { key: "finance", label: "Finance" },
+  { key: "equity", label: "Equity" },
   { key: "hiring", label: "Team" },
   { key: "ops", label: "Operations" },
 ] as const;
@@ -16,6 +17,7 @@ const tabs = [
 const AGENT_TAB_COLORS: Record<(typeof tabs)[number]["key"], string> = {
   legal: "#7B2FBE",
   finance: "#00C9A7",
+  equity: "#6C63FF",
   hiring: "#10B981",
   ops: "#F59E0B",
 };
@@ -43,6 +45,10 @@ function checklistKey(prefix: string, title: string) {
   return `${prefix}:${title}`;
 }
 
+function formatPercent(value: number) {
+  return `${value.toFixed(1)}%`;
+}
+
 function EvidenceList({ evidence }: { evidence: EvidenceReference[] }) {
   if (evidence.length === 0) {
     return null;
@@ -58,7 +64,13 @@ function EvidenceList({ evidence }: { evidence: EvidenceReference[] }) {
             className="rounded-2xl px-4 py-3"
             style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
           >
-            <p className="text-sm font-semibold">{item.title}</p>
+            {item.url ? (
+              <a href={item.url} target="_blank" rel="noreferrer" className="text-sm font-semibold underline-offset-4 hover:underline">
+                {item.title}
+              </a>
+            ) : (
+              <p className="text-sm font-semibold">{item.title}</p>
+            )}
             <p className="mt-1 text-xs uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "'JetBrains Mono', monospace" }}>
               {item.issuer}
             </p>
@@ -425,6 +437,113 @@ export function ResultsTabs({
             </div>
 
             <EvidenceList evidence={result.finance.evidence} />
+          </div>
+        </div>
+      ) : null}
+
+      {activeTab === "equity" ? (
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="grid gap-4">
+            <div className="glass-pill rounded-[1.5rem] p-5" style={{ borderColor: "rgba(108,99,255,0.3)", boxShadow: "0 0 30px rgba(108,99,255,0.08)" }}>
+              <p className="section-title">Cap table strategy</p>
+              <h3 className="mt-1 text-xl font-semibold" style={{ color: "#a89dff" }}>
+                Founder control with hiring room built in
+              </h3>
+              <div
+                className="mt-3 inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider"
+                style={{
+                  background: "rgba(108,99,255,0.14)",
+                  border: "1px solid rgba(168,157,255,0.28)",
+                  color: "#c7c1ff",
+                  fontFamily: "'JetBrains Mono', monospace",
+                }}
+              >
+                Planning preview only, not legal equity documentation
+              </div>
+              <p className="mt-3 text-sm leading-7" style={{ color: "rgba(255,255,255,0.65)" }}>
+                {result.cap_table.summary}
+              </p>
+              <p className="mt-3 text-xs leading-5" style={{ color: "rgba(255,255,255,0.5)" }}>
+                {result.cap_table.entity_fit}
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { label: "Founder pool", value: formatPercent(result.cap_table.founder_pool_percent) },
+                { label: "ESOP reserve", value: formatPercent(result.cap_table.option_pool_percent) },
+                { label: "Advisor pool", value: formatPercent(result.cap_table.advisor_pool_percent) },
+              ].map((card) => (
+                <div key={card.label} className="glass-pill rounded-2xl p-4">
+                  <p className="section-title">{card.label}</p>
+                  <p className="numeric mt-1 text-xl font-bold" style={{ color: "#a89dff" }}>
+                    {card.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="glass-pill rounded-[1.5rem] p-5">
+              <p className="section-title">Current founder allocations</p>
+              <div className="mt-4 grid gap-3">
+                {result.cap_table.allocations.map((allocation) => (
+                  <div
+                    key={allocation.holder}
+                    className="rounded-2xl px-4 py-4"
+                    style={{ background: "rgba(108,99,255,0.06)", border: "1px solid rgba(108,99,255,0.15)" }}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold">{allocation.holder}</p>
+                        <p className="mt-1 text-xs uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)", fontFamily: "'JetBrains Mono', monospace" }}>
+                          {allocation.role}
+                        </p>
+                      </div>
+                      <p className="numeric text-sm font-semibold" style={{ color: "#a89dff" }}>
+                        {formatPercent(allocation.ownership_percent)}
+                      </p>
+                    </div>
+                    <p className="mt-3 text-xs leading-5" style={{ color: "rgba(255,255,255,0.55)" }}>
+                      {allocation.notes}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-4 content-start">
+            <div className="glass-pill rounded-[1.5rem] p-5">
+              <p className="section-title">Dilution preview</p>
+              <div className="mt-4 grid gap-3">
+                <div className="rounded-2xl px-4 py-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  <p className="text-sm font-semibold">{result.cap_table.dilution_preview.round_name}</p>
+                  <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <p style={{ color: "rgba(255,255,255,0.35)" }}>Pre-money</p>
+                      <p className="mt-1" style={{ color: "#a89dff" }}>{formatEur(result.cap_table.dilution_preview.pre_money_eur)}</p>
+                    </div>
+                    <div>
+                      <p style={{ color: "rgba(255,255,255,0.35)" }}>New money</p>
+                      <p className="mt-1" style={{ color: "#a89dff" }}>{formatEur(result.cap_table.dilution_preview.new_money_eur)}</p>
+                    </div>
+                    <div>
+                      <p style={{ color: "rgba(255,255,255,0.35)" }}>Round dilution</p>
+                      <p className="mt-1" style={{ color: "#a89dff" }}>{formatPercent(result.cap_table.dilution_preview.dilution_percent)}</p>
+                    </div>
+                    <div>
+                      <p style={{ color: "rgba(255,255,255,0.35)" }}>Founder pool after round</p>
+                      <p className="mt-1" style={{ color: "#a89dff" }}>{formatPercent(result.cap_table.dilution_preview.founder_pool_post_raise_percent)}</p>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs leading-5" style={{ color: "rgba(255,255,255,0.55)" }}>
+                    {result.cap_table.dilution_preview.notes}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <EvidenceList evidence={result.cap_table.evidence} />
           </div>
         </div>
       ) : null}
