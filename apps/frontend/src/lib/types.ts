@@ -75,22 +75,6 @@ export type JobTaskStatePayload = {
   tasks: Record<string, boolean>;
 };
 
-export type ChatRole = "user" | "assistant";
-
-export type ChatMessage = {
-  role: ChatRole;
-  content: string;
-  created_at: string;
-};
-
-export type JobChatRequest = {
-  message: string;
-};
-
-export type JobChatHistoryPayload = {
-  messages: ChatMessage[];
-};
-
 export type StatusEventType =
   | "job_started"
   | "orchestrator_update"
@@ -98,6 +82,10 @@ export type StatusEventType =
   | "agent_progress"
   | "agent_completed"
   | "agent_failed"
+  | "interaction_answered"
+  | "interaction_completed"
+  | "agent_rerun_started"
+  | "agent_rerun_completed"
   | "coordination_event"
   | "job_completed"
   | "job_failed";
@@ -115,7 +103,6 @@ export type EvidenceReference = {
   title: string;
   issuer: string;
   rationale: string;
-  url?: string | null;
 };
 
 export type DownloadLink = {
@@ -188,33 +175,6 @@ export type FinanceOutput = {
   assumptions: string[];
   score: number;
   narrative: string;
-  evidence: EvidenceReference[];
-};
-
-export type CapTableAllocation = {
-  holder: string;
-  role: string;
-  ownership_percent: number;
-  notes: string;
-};
-
-export type DilutionPreview = {
-  round_name: string;
-  pre_money_eur: number;
-  new_money_eur: number;
-  dilution_percent: number;
-  founder_pool_post_raise_percent: number;
-  notes: string;
-};
-
-export type CapTableOutput = {
-  entity_fit: string;
-  summary: string;
-  founder_pool_percent: number;
-  option_pool_percent: number;
-  advisor_pool_percent: number;
-  allocations: CapTableAllocation[];
-  dilution_preview: DilutionPreview;
   evidence: EvidenceReference[];
 };
 
@@ -305,9 +265,48 @@ export type AnalysisResult = {
   overview: OverviewOutput;
   legal: LegalOutput;
   finance: FinanceOutput;
-  cap_table: CapTableOutput;
   hiring: HiringOutput;
   ops: OpsOutput;
   mission_log: MissionLogEntry[];
   downloads: DownloadLink[];
+};
+
+export type InteractionFieldOption = {
+  label: string;
+  value: string;
+};
+
+export type InteractionField = {
+  id: string;
+  label: string;
+  input_type: "text" | "textarea" | "select" | "boolean" | "number";
+  placeholder: string | null;
+  options: InteractionFieldOption[];
+};
+
+export type AgentInteraction = {
+  id: string;
+  agent: "legal" | "finance" | "hiring" | "ops";
+  kind: "input" | "review" | "approval";
+  state: "open" | "answered" | "approved" | "completed";
+  title: string;
+  question: string;
+  why_it_matters: string;
+  next_impact: string;
+  field: InteractionField | null;
+  review_notes: string[];
+  linked_download_kind: string | null;
+  answer: string | number | boolean | null;
+  created_at: string;
+  answered_at: string | null;
+};
+
+export type JobInteractionListPayload = {
+  interactions: AgentInteraction[];
+};
+
+export type InteractionAnswerResponse = {
+  status: "accepted";
+  interaction: AgentInteraction;
+  result: AnalysisResult;
 };

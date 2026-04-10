@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { analyzeStartup, fetchDemoPersonas } from "@/lib/api";
@@ -101,7 +101,6 @@ export default function StartPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [step1Error, setStep1Error] = useState<string | null>(null);
-  const autoDemoHandled = useRef(false);
 
   function updateField<K extends keyof AnalyzeRequest>(key: K, value: AnalyzeRequest[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -143,9 +142,28 @@ export default function StartPage() {
     setStep(3);
   }
 
-  async function submitStartup(payload: AnalyzeRequest) {
-    setIsSubmitting(true);
+  async function handleSubmit() {
     setError(null);
+
+    const trimmedName = form.company_name.trim();
+    if (trimmedName.length < 2) {
+      setStep1Error("Company name must be at least 2 characters.");
+      setStep(1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // Map goal to goals text
+    const goalsText =
+      goalKey === "fundraise"
+        ? "Seed round in 6 months, investor-ready"
+        : goalKey === "expand"
+        ? "Expand into Germany from abroad"
+        : "Bootstrap and grow self-funded";
+
+    const payload: AnalyzeRequest = { ...form, company_name: trimmedName, goals: goalsText };
 
     try {
       const queued = await analyzeStartup(payload);
@@ -157,41 +175,6 @@ export default function StartPage() {
       setIsSubmitting(false);
     }
   }
-
-  async function handleSubmit() {
-    const goalsText =
-      goalKey === "fundraise"
-        ? "Seed round in 6 months, investor-ready"
-        : goalKey === "expand"
-        ? "Expand into Germany from abroad"
-        : "Bootstrap and grow self-funded";
-
-    await submitStartup({ ...form, goals: goalsText });
-  }
-
-  useEffect(() => {
-    if (autoDemoHandled.current || personas.length === 0) {
-      return;
-    }
-
-    const params = new URLSearchParams(window.location.search);
-    const personaId = params.get("persona");
-    if (!personaId) {
-      return;
-    }
-
-    const persona = personas.find((item) => item.id === personaId);
-    if (!persona) {
-      return;
-    }
-
-    autoDemoHandled.current = true;
-    applyPersona(persona);
-
-    if (params.get("autostart") === "1") {
-      void submitStartup(persona.request);
-    }
-  }, [personas]);
 
   const capitalThreshold = 25000;
   const isUg = form.available_capital_eur < capitalThreshold;
@@ -221,17 +204,6 @@ export default function StartPage() {
             <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
               Step {step} of 3
             </p>
-            <Link
-              href="/start?persona=sarah-thomas&autostart=1"
-              className="rounded-full px-4 py-2 text-xs font-semibold transition hover:scale-[1.02]"
-              style={{
-                background: "rgba(108,99,255,0.16)",
-                border: "1px solid rgba(168,157,255,0.35)",
-                color: "rgba(255,255,255,0.9)",
-              }}
-            >
-              Run best demo
-            </Link>
           </div>
         </nav>
 
@@ -606,8 +578,11 @@ export default function StartPage() {
               <button
                 type="button"
                 onClick={() => {
-                  if (step === 1 && !form.company_name.trim()) {
-                    setStep1Error("Please enter a company name.");
+                  const name = form.company_name.trim();
+                  if (step === 1 && name.length < 2) {
+                    setStep1Error(
+                      name.length === 0 ? "Please enter a company name." : "Company name must be at least 2 characters.",
+                    );
                     window.scrollTo({ top: 0, behavior: "smooth" });
                     return;
                   }

@@ -1009,5 +1009,7 @@
       }
     ]
   },
-  "task_state": {}
+  "task_state": {},
+  "interactions": [],
+  "founder_context_updates": {}
 }

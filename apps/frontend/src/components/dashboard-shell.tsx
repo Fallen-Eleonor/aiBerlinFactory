@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  answerJobInteraction,
   fetchJobDetails,
+  fetchJobInteractions,
   fetchJobRequest,
   fetchJobTasks,
   fetchJobs,
@@ -13,9 +15,9 @@ import {
   updateJobTasks,
 } from "@/lib/api";
 import { getClientId } from "@/lib/client-id";
-import { AnalyzeRequest, AnalysisResult, JobDetails, JobSummary, StatusEvent } from "@/lib/types";
+import { AgentInteraction, AnalyzeRequest, AnalysisResult, JobDetails, JobSummary, StatusEvent } from "@/lib/types";
+import { AgentLinkModal } from "@/components/agent-link-modal";
 import { ResultsTabs } from "@/components/results-tabs";
-import { DashboardChat } from "@/components/dashboard-chat";
 import { WarRoom } from "@/components/war-room";
 
 const initialAgentStates = {
@@ -58,24 +60,6 @@ function displayScoreLabel(label: string) {
   return label;
 }
 
-function biggestRisk(result: AnalysisResult, jobRequest: AnalyzeRequest | null) {
-  if (result.finance.runway_months.base <= 4) {
-    return "Short runway before the next financing milestone.";
-  }
-  if (jobRequest?.founder_background.foreign_founder) {
-    return "Cross-border founder setup can slow banking and notarization.";
-  }
-  if (result.ops.score < 72) {
-    return "Compliance setup still needs tightening before launch.";
-  }
-  return "The first hiring wave must stay disciplined to preserve runway.";
-}
-
-function bestFundingPath(result: AnalysisResult) {
-  const eligibleProgram = result.finance.funding_programs.find((program) => program.eligible);
-  return eligibleProgram?.name ?? "Investor-led pre-seed round";
-}
-
 export function DashboardShell({ jobId }: { jobId: string }) {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [jobDetails, setJobDetails] = useState<JobDetails | null>(null);
@@ -83,6 +67,8 @@ export function DashboardShell({ jobId }: { jobId: string }) {
   const [history, setHistory] = useState<JobSummary[]>([]);
   const [tasks, setTasks] = useState<Record<string, boolean>>({});
   const [events, setEvents] = useState<StatusEvent[]>([]);
+  const [interactions, setInteractions] = useState<AgentInteraction[]>([]);
+  const [agentModalOpen, setAgentModalOpen] = useState(false);
   const [agentStates, setAgentStates] = useState(initialAgentStates);
   const [loadingError, setLoadingError] = useState<string | null>(null);
 
@@ -90,7 +76,7 @@ export function DashboardShell({ jobId }: { jobId: string }) {
     const clientId = getClientId();
     let mounted = true;
     let source: EventSource | null = null;
-    let completed = false;
+    let streamFailed = false;
 
     async function refreshHistory() {
       const jobs = await fetchJobs(clientId);
@@ -115,14 +101,22 @@ export function DashboardShell({ jobId }: { jobId: string }) {
       setTasks(taskPayload.tasks);
     }
 
+    async function refreshInteractions() {
+      const latestInteractions = await fetchJobInteractions(jobId, clientId).catch(() => []);
+      if (mounted) {
+        setInteractions(latestInteractions);
+      }
+    }
+
     async function bootstrap() {
       try {
-        const [details, requestPayload, taskPayload, jobs, existingResult] = await Promise.all([
+        const [details, requestPayload, taskPayload, jobs, existingResult, interactionPayload] = await Promise.all([
           fetchJobDetails(jobId, clientId),
           fetchJobRequest(jobId, clientId),
           fetchJobTasks(jobId, clientId),
           fetchJobs(clientId),
           fetchResult(jobId, clientId),
+          fetchJobInteractions(jobId, clientId).catch(() => []),
         ]);
 
         if (!mounted) {
@@ -133,9 +127,9 @@ export function DashboardShell({ jobId }: { jobId: string }) {
         setJobRequest(requestPayload);
         setTasks(taskPayload.tasks);
         setHistory(jobs);
+        setInteractions(interactionPayload);
 
         if (existingResult) {
-          completed = true;
           setResult(existingResult);
           setAgentStates(completedAgentStates());
         }
@@ -159,7 +153,7 @@ export function DashboardShell({ jobId }: { jobId: string }) {
               ...current,
               [event.agent as keyof typeof current]: {
                 status:
-                  event.type === "agent_completed"
+                  event.type === "agent_completed" || event.type === "agent_rerun_completed"
                     ? "complete"
                     : event.type === "agent_failed"
                       ? "failed"
@@ -169,8 +163,23 @@ export function DashboardShell({ jobId }: { jobId: string }) {
             }));
           }
 
+          if (
+            event.type === "interaction_answered" ||
+            event.type === "interaction_completed" ||
+            event.type === "agent_rerun_started" ||
+            event.type === "agent_rerun_completed"
+          ) {
+            await refreshInteractions();
+          }
+
+          if (event.type === "agent_rerun_completed") {
+            const refreshedResult = await fetchResult(jobId, clientId).catch(() => null);
+            if (refreshedResult && mounted) {
+              setResult(refreshedResult);
+            }
+          }
+
           if (event.type === "job_completed") {
-            completed = true;
             const [completedResult] = await Promise.all([
               fetchResult(jobId, clientId),
               refreshDetails(),
@@ -179,12 +188,12 @@ export function DashboardShell({ jobId }: { jobId: string }) {
             if (completedResult && mounted) {
               setResult(completedResult);
               setAgentStates(completedAgentStates());
+              await refreshInteractions();
             }
-            source?.close();
           }
 
           if (event.type === "job_failed") {
-            completed = true;
+            streamFailed = true;
             setLoadingError(event.message);
             source?.close();
           }
@@ -194,17 +203,15 @@ export function DashboardShell({ jobId }: { jobId: string }) {
 
       source.onerror = () => {
         void (async () => {
-          if (completed) {
+          if (streamFailed) {
             return;
           }
 
           try {
             const maybeResult = await fetchResult(jobId, clientId);
             if (maybeResult && mounted) {
-              completed = true;
               setResult(maybeResult);
-              setAgentStates(completedAgentStates());
-              source?.close();
+              await refreshInteractions();
               return;
             }
           } catch {
@@ -243,6 +250,18 @@ export function DashboardShell({ jobId }: { jobId: string }) {
       setTasks(previous);
       setLoadingError(error instanceof Error ? error.message : "Failed to persist checklist state.");
     }
+  }
+
+  async function handleInteractionSubmit(agent: "legal" | "finance" | "hiring" | "ops", value: string | number | boolean) {
+    const clientId = getClientId();
+    const interaction = interactions.find((item) => item.agent === agent);
+    if (!interaction) {
+      return;
+    }
+    const payload = await answerJobInteraction(jobId, interaction.id, value, clientId);
+    setResult(payload.result);
+    const latestInteractions = await fetchJobInteractions(jobId, clientId).catch(() => []);
+    setInteractions(latestInteractions.length > 0 ? latestInteractions : interactions.map((item) => (item.id === payload.interaction.id ? payload.interaction : item)));
   }
 
   return (
@@ -311,6 +330,28 @@ export function DashboardShell({ jobId }: { jobId: string }) {
         completed={Boolean(result) || jobDetails?.status === "completed"}
       />
 
+      {result ? (
+        <section className="liquid-glass glass-border-soft rounded-[1.75rem] p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="section-title">Agent / Founder Loop</p>
+              <h2 className="mt-2 text-2xl font-semibold">Open a focused human-in-the-loop workspace</h2>
+              <p className="glass-muted mt-2 max-w-3xl text-sm leading-7">
+                Keep the main dashboard clean. When an agent needs clarification, approval, or a quick draft review, use a dedicated popup workspace instead of pushing more UI into the page.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAgentModalOpen(true)}
+              className="rounded-full px-5 py-3 text-sm font-semibold transition"
+              style={{ background: "#6C63FF", color: "#fff", boxShadow: "0 0 24px rgba(108,99,255,0.35)" }}
+            >
+              Open Agent Link Workspace
+            </button>
+          </div>
+        </section>
+      ) : null}
+
       {loadingError ? (
         <div className="liquid-glass glass-border-soft rounded-[1.5rem] p-5 text-sm text-red-300">{loadingError}</div>
       ) : null}
@@ -322,7 +363,7 @@ export function DashboardShell({ jobId }: { jobId: string }) {
               <p className="section-title">Executive summary</p>
               <h2 className="mt-2 text-3xl font-semibold">{result.overview.recommended_entity}</h2>
               <p className="glass-muted mt-4 max-w-2xl text-sm leading-7">{result.legal.narrative}</p>
-              <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-6 grid gap-4 md:grid-cols-4">
                 <div className="glass-soft rounded-[1.5rem] p-4">
                   <p className="section-title">Runway</p>
                   <p className="numeric mt-2 text-2xl font-semibold">{result.overview.runway_months_base} months</p>
@@ -338,14 +379,6 @@ export function DashboardShell({ jobId }: { jobId: string }) {
                 <div className="glass-soft rounded-[1.5rem] p-4">
                   <p className="section-title">Next milestone</p>
                   <p className="mt-2 text-sm font-semibold">{result.overview.next_milestone}</p>
-                </div>
-                <div className="glass-soft rounded-[1.5rem] p-4">
-                  <p className="section-title">Best funding path</p>
-                  <p className="mt-2 text-sm font-semibold">{bestFundingPath(result)}</p>
-                </div>
-                <div className="glass-soft rounded-[1.5rem] p-4">
-                  <p className="section-title">Biggest risk</p>
-                  <p className="mt-2 text-sm font-semibold">{biggestRisk(result, jobRequest)}</p>
                 </div>
               </div>
             </div>
@@ -379,8 +412,6 @@ export function DashboardShell({ jobId }: { jobId: string }) {
               </div>
             </div>
           </section>
-
-          <DashboardChat jobId={jobId} companyName={companyName} enabled={Boolean(result)} />
 
           <ResultsTabs result={result} tasks={tasks} onTaskToggle={handleTaskToggle} />
 
@@ -442,6 +473,17 @@ export function DashboardShell({ jobId }: { jobId: string }) {
           </p>
         </section>
       )}
+
+      {result ? (
+        <AgentLinkModal
+          open={agentModalOpen}
+          onClose={() => setAgentModalOpen(false)}
+          result={result}
+          request={jobRequest}
+          interactions={interactions}
+          onSubmitInteraction={handleInteractionSubmit}
+        />
+      ) : null}
     </main>
   );
 }

@@ -1,34 +1,19 @@
 import { getClientId } from "@/lib/client-id";
 import {
+  AgentInteraction,
   AnalysisResult,
   AnalyzeRequest,
-  ChatMessage,
   DemoPersona,
-  JobChatHistoryPayload,
+  InteractionAnswerResponse,
   JobDetails,
+  JobInteractionListPayload,
   JobQueuedResponse,
   JobSummary,
   JobTaskStatePayload,
   StatusEvent,
 } from "@/lib/types";
 
-const LOCAL_DEV_API_BASE_URL = "http://localhost:8000";
-
-function resolveApiBaseUrl() {
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    return process.env.NEXT_PUBLIC_API_BASE_URL;
-  }
-
-  if (process.env.NODE_ENV !== "production") {
-    return LOCAL_DEV_API_BASE_URL;
-  }
-
-  throw new Error("NEXT_PUBLIC_API_BASE_URL is required in production. Point it to your deployed backend.");
-}
-
-function toApiUrl(path: string) {
-  return `${resolveApiBaseUrl()}${path}`;
-}
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 type FetchOptions = Omit<RequestInit, "headers"> & {
   headers?: HeadersInit;
@@ -36,15 +21,60 @@ type FetchOptions = Omit<RequestInit, "headers"> & {
 };
 
 function withQuery(url: string, clientId: string) {
-  const baseUrl = resolveApiBaseUrl();
-  const resolved = new URL(url, baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`);
+  const resolved = new URL(url, API_BASE_URL);
   resolved.searchParams.set("client_id", clientId);
   return resolved.toString();
 }
 
+const VALIDATION_FIELD_LABELS: Record<string, string> = {
+  company_name: "Company name",
+  industry: "Industry",
+  bundesland: "Bundesland",
+  founder_count: "Number of founders",
+  available_capital_eur: "Available capital",
+  goals: "Goals",
+  founder_background: "Founder background",
+};
+
+function labelForValidationSegment(segment: string): string {
+  return VALIDATION_FIELD_LABELS[segment] ?? segment.replace(/_/g, " ");
+}
+
+/** Turn FastAPI/Pydantic JSON validation responses into a short user-facing message. */
+function formatHttpErrorBody(text: string, fallback: string): string {
+  const trimmed = text.trim();
+  if (!trimmed.startsWith("{")) {
+    return trimmed || fallback;
+  }
+  try {
+    const parsed = JSON.parse(trimmed) as { detail?: unknown };
+    if (Array.isArray(parsed.detail)) {
+      const messages = parsed.detail.map((item: unknown) => {
+        if (item && typeof item === "object" && "msg" in item) {
+          const rec = item as { msg?: string; loc?: unknown[] };
+          const loc = Array.isArray(rec.loc)
+            ? rec.loc.filter((x): x is string => typeof x === "string" && x !== "body")
+            : [];
+          const field = loc.length > 0 ? labelForValidationSegment(loc[loc.length - 1]!) : null;
+          const msg = typeof rec.msg === "string" ? rec.msg : String(rec.msg);
+          return field ? `${field}: ${msg}` : msg;
+        }
+        return String(item);
+      });
+      return messages.filter(Boolean).join(" ") || fallback;
+    }
+    if (typeof parsed.detail === "string") {
+      return parsed.detail;
+    }
+  } catch {
+    /* keep raw text */
+  }
+  return trimmed || fallback;
+}
+
 async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T> {
   const clientId = options.clientId ?? getClientId();
-  const response = await fetch(toApiUrl(path), {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       "x-startup-os-client-id": clientId,
@@ -55,7 +85,7 @@ async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T>
 
   if (!response.ok) {
     const detail = await response.text();
-    throw new Error(detail || `Request failed for ${path}`);
+    throw new Error(formatHttpErrorBody(detail, `Request failed for ${path}`));
   }
 
   return response.json() as Promise<T>;
@@ -103,26 +133,30 @@ export async function updateJobTasks(jobId: string, tasks: Record<string, boolea
   });
 }
 
-export async function fetchJobChat(jobId: string, clientId?: string): Promise<ChatMessage[]> {
-  const payload = await apiFetch<JobChatHistoryPayload>(`/api/jobs/${jobId}/chat`, { clientId });
-  return payload.messages;
+export async function fetchJobInteractions(jobId: string, clientId?: string): Promise<AgentInteraction[]> {
+  const payload = await apiFetch<JobInteractionListPayload>(`/api/jobs/${jobId}/interactions`, { clientId });
+  return payload.interactions;
 }
 
-export async function sendJobChatMessage(jobId: string, message: string, clientId?: string): Promise<ChatMessage[]> {
-  const payload = await apiFetch<JobChatHistoryPayload>(`/api/jobs/${jobId}/chat`, {
+export async function answerJobInteraction(
+  jobId: string,
+  interactionId: string,
+  value: string | number | boolean,
+  clientId?: string,
+): Promise<InteractionAnswerResponse> {
+  return apiFetch<InteractionAnswerResponse>(`/api/jobs/${jobId}/interactions/${interactionId}/answer`, {
     method: "POST",
     clientId,
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ value }),
   });
-  return payload.messages;
 }
 
 export async function fetchResult(jobId: string, clientId?: string): Promise<AnalysisResult | null> {
   const resolvedClientId = clientId ?? getClientId();
-  const response = await fetch(toApiUrl(`/api/result/${jobId}`), {
+  const response = await fetch(`${API_BASE_URL}/api/result/${jobId}`, {
     cache: "no-store",
     headers: {
       "x-startup-os-client-id": resolvedClientId,
@@ -135,7 +169,7 @@ export async function fetchResult(jobId: string, clientId?: string): Promise<Ana
 
   if (!response.ok) {
     const detail = await response.text();
-    throw new Error(detail || "Failed to load result.");
+    throw new Error(formatHttpErrorBody(detail, "Failed to load result."));
   }
 
   return response.json();
@@ -151,6 +185,10 @@ export function openStatusStream(jobId: string, onEvent: (event: StatusEvent) =>
     "agent_progress",
     "agent_completed",
     "agent_failed",
+    "interaction_answered",
+    "interaction_completed",
+    "agent_rerun_started",
+    "agent_rerun_completed",
     "coordination_event",
     "job_completed",
     "job_failed",

@@ -159,17 +159,6 @@ export default function HomePage() {
             >
               Start free
             </Link>
-            <Link
-              href="/start?persona=sarah-thomas&autostart=1"
-              className="rounded-full px-7 py-3.5 text-sm font-medium transition hover:scale-[1.02]"
-              style={{
-                color: "rgba(255,255,255,0.92)",
-                border: "1px solid rgba(168,157,255,0.35)",
-                background: "rgba(108,99,255,0.16)",
-              }}
-            >
-              Run investor demo
-            </Link>
             <a
               href="#agents"
               className="rounded-full px-7 py-3.5 text-sm font-medium transition"

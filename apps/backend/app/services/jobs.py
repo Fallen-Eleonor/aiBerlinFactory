@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from fastapi import HTTPException
 
-from app.models import AnalysisResult, AnalyzeRequest, ChatMessage, EventPayload
+from app.models import AgentInteraction, AnalysisResult, AnalyzeRequest, EventPayload
 from app.models import JobSummary
 
 
@@ -19,27 +19,6 @@ def now_utc() -> datetime:
 
 
 TERMINAL_JOB_STATUSES = {"completed", "failed"}
-
-
-def default_task_state(result: AnalysisResult | None) -> dict[str, bool]:
-    if result is None:
-        return {}
-
-    keys: dict[str, bool] = {}
-    for item in result.legal.incorporation_steps:
-        keys[f"legal:incorporation:{item.title}"] = False
-    for item in result.legal.post_incorporation_checklist:
-        keys[f"legal:post:{item.title}"] = False
-    for item in result.ops.dsgvo_checklist:
-        keys[f"ops:dsgvo:{item.title}"] = False
-    return keys
-
-
-def merge_task_state(existing: dict[str, bool], result: AnalysisResult | None) -> dict[str, bool]:
-    merged = default_task_state(result)
-    for key, value in existing.items():
-        merged[key] = bool(value)
-    return merged
 
 
 @dataclass
@@ -53,7 +32,8 @@ class JobRecord:
     subscribers: list[asyncio.Queue[EventPayload]] = field(default_factory=list)
     result: AnalysisResult | None = None
     task_state: dict[str, bool] = field(default_factory=dict)
-    chat_history: list[ChatMessage] = field(default_factory=list)
+    interactions: list[AgentInteraction] = field(default_factory=list)
+    founder_context_updates: dict[str, str | int | bool] = field(default_factory=dict)
 
 
 class JobStore:
@@ -134,8 +114,34 @@ class JobStore:
         job = self.get_job(job_id)
         job.result = result
         job.status = "completed"
-        job.task_state = merge_task_state(job.task_state, result)
         self._persist_job(job)
+
+    def get_interactions(self, job_id: str) -> list[AgentInteraction]:
+        return [interaction.model_copy(deep=True) for interaction in self.get_job(job_id).interactions]
+
+    def set_interactions(self, job_id: str, interactions: list[AgentInteraction]) -> list[AgentInteraction]:
+        job = self.get_job(job_id)
+        job.interactions = [interaction.model_copy(deep=True) for interaction in interactions]
+        self._persist_job(job)
+        return self.get_interactions(job_id)
+
+    def update_interaction(self, job_id: str, interaction_id: str, interaction: AgentInteraction) -> AgentInteraction:
+        job = self.get_job(job_id)
+        for index, existing in enumerate(job.interactions):
+            if existing.id == interaction_id:
+                job.interactions[index] = interaction.model_copy(deep=True)
+                self._persist_job(job)
+                return job.interactions[index].model_copy(deep=True)
+        raise HTTPException(status_code=404, detail="Interaction not found")
+
+    def get_founder_context_updates(self, job_id: str) -> dict[str, str | int | bool]:
+        return dict(self.get_job(job_id).founder_context_updates)
+
+    def set_founder_context_update(self, job_id: str, key: str, value: str | int | bool) -> dict[str, str | int | bool]:
+        job = self.get_job(job_id)
+        job.founder_context_updates[str(key)] = value
+        self._persist_job(job)
+        return dict(job.founder_context_updates)
 
     def set_failed(self, job_id: str) -> None:
         job = self.get_job(job_id)
@@ -147,21 +153,9 @@ class JobStore:
 
     def set_task_state(self, job_id: str, tasks: dict[str, bool]) -> dict[str, bool]:
         job = self.get_job(job_id)
-        merged = merge_task_state(job.task_state, job.result)
-        for key, value in tasks.items():
-            merged[str(key)] = bool(value)
-        job.task_state = merged
+        job.task_state = dict(tasks)
         self._persist_job(job)
         return dict(job.task_state)
-
-    def get_chat_history(self, job_id: str) -> list[ChatMessage]:
-        return list(self.get_job(job_id).chat_history)
-
-    def append_chat_message(self, job_id: str, message: ChatMessage) -> list[ChatMessage]:
-        job = self.get_job(job_id)
-        job.chat_history.append(message)
-        self._persist_job(job)
-        return list(job.chat_history)
 
     async def stream(self, job_id: str) -> AsyncIterator[str]:
         job = self._jobs.get(job_id)
@@ -170,17 +164,12 @@ class JobStore:
         for event in job.events:
             yield self._serialize_event(event)
 
-        if job.status in TERMINAL_JOB_STATUSES:
-            return
-
         queue: asyncio.Queue[EventPayload] = asyncio.Queue()
         job.subscribers.append(queue)
         try:
             while True:
                 event = await queue.get()
                 yield self._serialize_event(event)
-                if event.type in {"job_completed", "job_failed"}:
-                    return
         finally:
             if queue in job.subscribers:
                 job.subscribers.remove(queue)
@@ -202,7 +191,8 @@ class JobStore:
             "events": [event.model_dump(mode="json") for event in job.events],
             "result": job.result.model_dump(mode="json") if job.result else None,
             "task_state": job.task_state,
-            "chat_history": [message.model_dump(mode="json") for message in job.chat_history],
+            "interactions": [interaction.model_dump(mode="json") for interaction in job.interactions],
+            "founder_context_updates": job.founder_context_updates,
         }
         path = self._job_path(job.job_id)
         tmp_path = path.with_suffix(".json.tmp")
@@ -225,7 +215,8 @@ class JobStore:
                     str(key): bool(value)
                     for key, value in payload.get("task_state", {}).items()
                 }
-                chat_history = [ChatMessage.model_validate(message) for message in payload.get("chat_history", [])]
+                interactions = [AgentInteraction.model_validate(item) for item in payload.get("interactions", [])]
+                founder_context_updates = payload.get("founder_context_updates", {})
 
                 if result is None and status not in TERMINAL_JOB_STATUSES:
                     status = "failed"
@@ -248,8 +239,13 @@ class JobStore:
                     created_at=created_at,
                     events=events,
                     result=result,
-                    task_state=merge_task_state(task_state, result),
-                    chat_history=chat_history,
+                    task_state=task_state,
+                    interactions=interactions,
+                    founder_context_updates={
+                        str(key): value
+                        for key, value in founder_context_updates.items()
+                        if isinstance(value, (str, int, bool))
+                    },
                 )
                 self._jobs[job_id] = job
                 self._persist_job(job)
